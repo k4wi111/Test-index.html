@@ -549,7 +549,24 @@
       #notification-modal, .modal-content { transition: none !important; }
     }
   
-  </style>
+  
+  /* ===== Aggiunte: pill scadenza/giacenza (additive) ===== */
+  .tagline { margin-top: 8px; display:flex; gap:10px; flex-wrap:wrap; }
+  .tag {
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 0.82rem; font-weight: 800;
+    background: #fff; border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    color: #374151;
+  }
+  .tag.red { border-color: rgba(239,68,68,0.55); color:#991b1b; }
+  .tag.yellow { border-color: rgba(245,158,11,0.55); color:#92400e; }
+  .tag.green { border-color: rgba(16,185,129,0.55); color:#065f46; }
+  .tag.skull { border-color: rgba(0,0,0,0.35); color:#111827; }
+  .smallmeta { margin-top:6px; font-size:0.82rem; color:#6b7280; font-weight:700; }
+
+</style>
 </head>
 <body>
 <header>
@@ -560,6 +577,7 @@
 <nav class="tabs">
   <button class="tab active" id="tab-lista" type="button">Lista Prodotti</button>
   <button class="tab" id="tab-mappa" type="button">Mappa</button>
+  <button class="tab" id="tab-stats" type="button">Statistiche</button>
 </nav>
 
 <main>
@@ -574,6 +592,10 @@
         <div style="flex:1; min-width:200px">
           <label for="lot">Numero Lotto</label>
           <input id="lot" placeholder="Numero lotto..." type="text" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div style="flex:1; min-width:200px">
+          <label for="expiry">Data Scadenza</label>
+          <input id="expiry" placeholder="Es: GEN/26 oppure GEN/26-FEB/26" type="text" autocomplete="off" spellcheck="false"/>
         </div>
       </div>
       <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
@@ -643,6 +665,52 @@
       </div>
     </div>
   </section>
+  <section id="view-stats" style="display:none">
+    <div class="card">
+      <h3 class="section" style="margin-top:0">Statistiche</h3>
+      <div id="statsSummary" class="muted" style="font-weight:700"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Top inseriti / eliminati</h3>
+      <div class="row" style="gap:14px; align-items:stretch">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">Top inseriti</div>
+          <div id="statsTopAdded"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">Top eliminati</div>
+          <div id="statsTopRemoved"></div>
+        </div>
+      </div>
+      <div id="statsAvgDwell" class="muted" style="margin-top:14px; font-weight:700"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Raggruppamento scadenze</h3>
+      <div class="row" style="gap:14px">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">☠️ Scaduti</div>
+          <div id="statsListSkull"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🔴 Rossi (&lt; 6 mesi)</div>
+          <div id="statsListRed"></div>
+        </div>
+      </div>
+      <div class="row" style="gap:14px; margin-top:14px">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🟡 Gialli (6–9 mesi)</div>
+          <div id="statsListYellow"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🟢 Verdi (&gt; 9 mesi)</div>
+          <div id="statsListGreen"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer class="install" id="installBar">
@@ -671,6 +739,8 @@
     <input id="dName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
     <label for="dLot">Lotto</label>
     <input id="dLot" type="text" autocomplete="off" spellcheck="false"/>
+    <label for="dExpiry" style="margin-top:12px">Data Scadenza</label>
+    <input id="dExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
     <div class="row" style="margin-top:24px;"></div>
   </form>
 </dialog>
@@ -683,6 +753,23 @@
     <div class="row" style="margin-top:24px; justify-content: flex-end;">
       <button class="ghost" type="button" id="colCancel">Annulla</button>
       <button type="button" id="colOk" class="alt">Conferma Spostamento</button>
+    </div>
+  </form>
+</dialog>
+
+
+<dialog id="editDialog">
+  <form method="dialog">
+    <h3>Modifica Prodotto</h3>
+    <label for="eName">Descrizione</label>
+    <input id="eName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
+    <label for="eLot">Lotto</label>
+    <input id="eLot" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
+    <label for="eExpiry">Data Scadenza</label>
+    <input id="eExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
+    <div class="row" style="margin-top:24px; justify-content:flex-end;">
+      <button class="ghost" type="button" id="eCancel">Annulla</button>
+      <button type="button" id="eSave" class="alt">Salva</button>
     </div>
   </form>
 </dialog>
@@ -717,6 +804,41 @@
   };
   const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
+  // ====== scadenza (testo: GEN/26) + giacenza
+  const EXP_MONTHS = { GEN:0,FEB:1,MAR:2,APR:3,MAG:4,GIU:5,LUG:6,AGO:7,SET:8,OTT:9,NOV:10,DIC:11 };
+
+  function parseExpiryText(text){
+    if(!text) return null;
+    const m = String(text).toUpperCase().match(/(GEN|FEB|MAR|APR|MAG|GIU|LUG|AGO|SET|OTT|NOV|DIC)[\s\/-]?(\d{2})/);
+    if(!m) return null;
+    const year = 2000 + parseInt(m[2], 10);
+    const month = EXP_MONTHS[m[1]];
+    return new Date(year, month + 1, 0, 23,59,59);
+  }
+
+  function expiryStatus(text){
+    const d = parseExpiryText(text);
+    if(!d) return null;
+    const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+    if (days < 0) return { cls:'skull', label:`☠️ Scaduto da ${Math.abs(days)}g`, days };
+    if (days < 180) return { cls:'red', label:`🔴 Scad: ${text} (${days}g)`, days };
+    if (days <= 270) return { cls:'yellow', label:`🟡 Scad: ${text} (${days}g)`, days };
+    return { cls:'green', label:`🟢 Scad: ${text} (${days}g)`, days };
+  }
+
+  function daysSinceISO(iso){
+    const t = new Date(iso).getTime();
+    if(!Number.isFinite(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t)/86400000));
+  }
+  function giacenzaStatus(days){
+    if (days == null) return null;
+    if (days > 180) return { cls:'red', label:`🔴 Giacenza: ${days}g` };
+    if (days > 60)  return { cls:'yellow', label:`🟡 Giacenza: ${days}g` };
+    return { cls:'green', label:`🟢 Giacenza: ${days}g` };
+  }
+
+
   // Lazy-load jsPDF (evita peso all'avvio)
   let jsPDF = null;
   let jsPDFLoading = null;
@@ -748,9 +870,11 @@
   // ====== costanti
   const rows = 7, cols = 10;
   const LS_KEY = "warehouse_products_v6";
+  const LS_EVENTS_KEY = "warehouse_events_v1";
 
   // ====== stato
   let products = [];
+  let events = []; // storico eventi (add/remove/edit)
   let undoStack = []; // snapshot
   let gridMap = new Map(); // key: "r,c" -> product id
 
@@ -759,11 +883,14 @@
     undoBtn: $('undoBtn'),
     tabLista: $('tab-lista'),
     tabMappa: $('tab-mappa'),
+    tabStats: $('tab-stats'),
     viewLista: $('view-lista'),
     viewMappa: $('view-mappa'),
+    viewStats: $('view-stats'),
 
     name: $('name'),
     lot: $('lot'),
+    expiry: $('expiry'),
     clearBtn: $('clearBtn'),
     saveBtn: $('saveBtn'),
 
@@ -787,6 +914,7 @@
     cellTitle: $('cellTitle'),
     dName: $('dName'),
     dLot: $('dLot'),
+    dExpiry: $('dExpiry'),
 
     colDialog: $('colDialog'),
     colSelect: $('colSelect'),
@@ -803,6 +931,21 @@
     installBtn: $('installBtn'),
 
     tpl: $('list-item-tpl'),
+    editDialog: $('editDialog'),
+    eName: $('eName'),
+    eLot: $('eLot'),
+    eExpiry: $('eExpiry'),
+    eCancel: $('eCancel'),
+    eSave: $('eSave'),
+
+    statsSummary: $('statsSummary'),
+    statsTopAdded: $('statsTopAdded'),
+    statsTopRemoved: $('statsTopRemoved'),
+    statsAvgDwell: $('statsAvgDwell'),
+    statsListSkull: $('statsListSkull'),
+    statsListRed: $('statsListRed'),
+    statsListYellow: $('statsListYellow'),
+    statsListGreen: $('statsListGreen'),
   };
 
   // ====== notifiche
@@ -862,6 +1005,31 @@
     try{ localStorage.setItem(LS_KEY, JSON.stringify(products)); }catch(e){}
   }
 
+  function loadEvents(){
+    try{
+      const raw = localStorage.getItem(LS_EVENTS_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveEvents(){
+    try{ localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events.slice(-5000))); }catch(e){}
+  }
+  function logEvent(type, product){
+    try{
+      events.push({
+        type,
+        name: (product && product.name) ? String(product.name) : '',
+        lot: (product && product.lot) ? String(product.lot) : '',
+        expiryText: (product && product.expiryText) ? String(product.expiryText) : '',
+        t: Date.now(),
+        dateAdded: (product && product.dateAdded) ? String(product.dateAdded) : null
+      });
+      saveEvents();
+    }catch(e){}
+  }
+
+
   function normalizeProducts(list){
     const out = [];
     for (const p of (Array.isArray(list)?list:[])){
@@ -870,6 +1038,7 @@
         name: (p.name || '').toString(),
         lot: (p.lot || '').toString(),
         dateAdded: p.dateAdded || new Date().toISOString(),
+        expiryText: (p.expiryText ?? p.expiry ?? '').toString(),
         row: Number.isInteger(p.row) ? p.row : undefined,
         col: Number.isInteger(p.col) ? p.col : undefined,
       });
@@ -882,7 +1051,7 @@
   // ====== undo (snapshot)
   function saveToUndo(){
     try{
-      undoStack.push({ state: deepClone(products), t: Date.now() });
+      undoStack.push({ state: deepClone(products), events: deepClone(events), t: Date.now() });
       if (undoStack.length > 10) undoStack.shift();
       updateUndoButton();
     }catch(e){}
@@ -897,8 +1066,10 @@
     const last = undoStack.pop();
     if (last && last.state){
       products = deepClone(last.state);
+      if (last.events) events = deepClone(last.events);
       rebuildGridIndex();
       saveProducts();
+      saveEvents();
       scheduleRenderAll();
       updateUndoButton();
     }
@@ -907,11 +1078,19 @@
   // ====== tab
   function switchTab(view){
     const isLista = view === 'lista';
+    const isMappa = view === 'mappa';
+    const isStats = view === 'stats';
+
     el.viewLista.style.display = isLista ? '' : 'none';
-    el.viewMappa.style.display = isLista ? 'none' : '';
+    el.viewMappa.style.display = isMappa ? '' : 'none';
+    el.viewStats.style.display = isStats ? '' : 'none';
+
     el.tabLista.classList.toggle('active', isLista);
-    el.tabMappa.classList.toggle('active', !isLista);
-    if (!isLista) scheduleRenderGrid();
+    el.tabMappa.classList.toggle('active', isMappa);
+    el.tabStats.classList.toggle('active', isStats);
+
+    if (isMappa) scheduleRenderGrid();
+    if (isStats) renderStatsView();
   }
 
 
@@ -973,19 +1152,23 @@
   function countOccupied(){ return gridMap.size; }
 
   // ====== form
-  function clearForm(){ el.name.value=''; el.lot.value=''; }
+  function clearForm(){ el.name.value=''; el.lot.value=''; el.expiry.value=''; }
   function saveFromForm(){
     const name = el.name.value.trim();
     const lot = el.lot.value.trim();
-    if (!name && !lot) return;
+    const expiryText = (el.expiry.value || '').trim();
+    if (!name && !lot && !expiryText) return;
 
     saveToUndo();
 
-    const newProd = { id: uid(), name, lot, dateAdded: new Date().toISOString() };
+    const newProd = { id: uid(), name, lot, expiryText, dateAdded: new Date().toISOString() };
     // mettiamo in testa: così niente sort ad ogni render
     products.unshift(newProd);
+        logEvent('add', newProd);
+    logEvent('add', newProd);
 
     saveProducts();
+    saveEvents();
     clearForm();
     scheduleRenderAll();
   }
@@ -1063,6 +1246,7 @@
     scheduleRenderList();
     // render griglia solo se è visibile (riduce lavoro)
     if (el.viewMappa.style.display !== 'none') scheduleRenderGrid();
+    if (el.viewStats.style.display !== 'none') renderStatsView();
   }
 
   function renderList(){
@@ -1110,6 +1294,7 @@
     if (!listPlaced.length) emptyPlaced();
     else el.listPlaced.appendChild(buildListFragment(listPlaced, true));
   }
+    if (el.viewStats.style.display !== 'none') renderStatsView();
 
   function buildListFragment(arr, isPlaced){
     const frag = document.createDocumentFragment();
@@ -1134,12 +1319,49 @@
       ? `🏷️ ${(p.lot||'—')} <span style="margin-left:8px; color:#667eea; font-weight:700">📍 R${p.row+1} C${p.col+1}</span>`
       : detailText;
 
+    const meta = document.createElement('div');
+    meta.className = 'smallmeta';
+    meta.textContent = 'Inserito: ' + new Date(p.dateAdded).toLocaleDateString('it-IT');
+    node.querySelector('div[style="min-width:0"]').appendChild(meta);
+
+    const tagsWrap = document.createElement('div');
+    tagsWrap.className = 'tagline';
+
+    const exp = expiryStatus(p.expiryText);
+    if (p.expiryText && exp){
+      const t = document.createElement('div');
+      t.className = 'tag ' + exp.cls;
+      t.textContent = exp.label;
+      tagsWrap.appendChild(t);
+    } else if (p.expiryText){
+      const t = document.createElement('div');
+      t.className = 'tag yellow';
+      t.textContent = '🟡 Scad: ' + p.expiryText;
+      tagsWrap.appendChild(t);
+    }
+
+    const gDays = daysSinceISO(p.dateAdded);
+    const g = giacenzaStatus(gDays);
+    if (g){
+      const t2 = document.createElement('div');
+      t2.className = 'tag ' + g.cls;
+      t2.textContent = g.label;
+      tagsWrap.appendChild(t2);
+    }
+
+    if (tagsWrap.childNodes.length){
+      node.querySelector('div[style="min-width:0"]').appendChild(tagsWrap);
+    }
+
+
     // Pulsanti (dataset per delegation)
     if (isPlaced){
+      btns.appendChild(makeBtn('secondary','Modifica', 'edit', p.id));
       btns.appendChild(makeBtn('remove-grid','Metti a scaffale', 'unplace', p.id));
       btns.appendChild(makeBtn('go-to-map','Mappa', 'map', p.id));
       btns.appendChild(makeBtn('danger','Elimina', 'del', p.id));
     } else {
+      btns.appendChild(makeBtn('secondary','Modifica', 'edit', p.id));
       btns.appendChild(makeBtn('add-grid','Posiziona a terra', 'place', p.id));
       btns.appendChild(makeBtn('danger','Elimina', 'del', p.id));
     }
@@ -1172,10 +1394,16 @@
       return;
     }
 
+    if (action === 'edit'){
+      openEditDialog(id);
+      return;
+    }
+
     if (action === 'del'){
       showNotification('Conferma', 'Eliminare questo prodotto?', true, () => {
         saveToUndo();
         const oldCol = p.col;
+        logEvent('remove', p);
         products = products.filter(x => x.id !== id);
         rebuildGridIndex();
         saveProducts();
@@ -1237,7 +1465,19 @@
 
         const lot = document.createElement('div');
         lot.className = 'lot';
-        lot.textContent = p ? (p.lot || '') : '';
+        if (p){
+          const exp = expiryStatus(p.expiryText);
+          let mark = '';
+          if (exp){
+            if (exp.cls === 'skull') mark = ' ☠️';
+            else if (exp.cls === 'red') mark = ' 🔴';
+            else if (exp.cls === 'yellow') mark = ' 🟡';
+            else if (exp.cls === 'green') mark = ' 🟢';
+          }
+          lot.textContent = (p.lot || '') + mark;
+        } else {
+          lot.textContent = '';
+        }
 
         cell.appendChild(name);
         cell.appendChild(lot);
@@ -1262,6 +1502,7 @@
     el.cellTitle.textContent = `Cella R${r+1} C${c+1}`;
     el.dName.value = p ? (p.name || '') : '';
     el.dLot.value  = p ? (p.lot  || '') : '';
+    el.dExpiry.value = p ? (p.expiryText || '') : '';
 
     const buttonContainer = el.cellDialog.querySelector('.row');
     buttonContainer.textContent = '';
@@ -1273,7 +1514,8 @@
     saveBtn.addEventListener('click', () => {
       const name = el.dName.value.trim();
       const lot  = el.dLot.value.trim();
-      if (!name && !lot){
+      const expiryText = (el.dExpiry.value || '').trim();
+      if (!name && !lot && !expiryText){
         showNotification('Attenzione', 'Inserisci dati', false);
         return;
       }
@@ -1283,9 +1525,12 @@
       if (p){
         p.name = name;
         p.lot  = lot;
+        p.expiryText = expiryText;
+        logEvent('edit', p);
       } else {
-        const newProd = { id: uid(), name, lot, dateAdded: new Date().toISOString(), row: r, col: c };
+        const newProd = { id: uid(), name, lot, expiryText, dateAdded: new Date().toISOString(), row: r, col: c };
         products.unshift(newProd);
+        logEvent('add', newProd);
       }
 
       rebuildGridIndex();
@@ -1354,6 +1599,7 @@
           showNotification('Conferma', 'Eliminare questo prodotto?', true, () => {
             saveToUndo();
             const oldCol = p.col;
+            logEvent('remove', p);
             products = products.filter(x => x.id !== p.id);
             rebuildGridIndex();
             saveProducts();
@@ -1485,6 +1731,7 @@
   // ====== tabs + undo + form
   el.tabLista.addEventListener('click', () => switchTab('lista'));
   el.tabMappa.addEventListener('click', () => switchTab('mappa'));
+  el.tabStats.addEventListener('click', () => switchTab('stats'));
   el.undoBtn.addEventListener('click', undoLastAction);
   el.clearBtn.addEventListener('click', clearForm);
   el.saveBtn.addEventListener('click', saveFromForm);
@@ -1505,8 +1752,164 @@
   });
 
   // ====== init
+
+  // ====== Edit dialog (lista)
+  let editTargetId = null;
+
+  function openEditDialog(id){
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    editTargetId = id;
+    el.eName.value = p.name || '';
+    el.eLot.value = p.lot || '';
+    el.eExpiry.value = p.expiryText || '';
+    try { el.editDialog.showModal(); } catch(e){ el.editDialog.setAttribute('open',''); }
+  }
+
+  el.eCancel.addEventListener('click', () => {
+    try{ el.editDialog.close(); }catch(e){}
+    editTargetId = null;
+  });
+
+  el.eSave.addEventListener('click', () => {
+    if (!editTargetId) { try{ el.editDialog.close(); }catch(e){}; return; }
+    const p = products.find(x => x.id === editTargetId);
+    if (!p) { try{ el.editDialog.close(); }catch(e){}; editTargetId = null; return; }
+
+    const name = (el.eName.value || '').trim();
+    const lot  = (el.eLot.value || '').trim();
+    const expiryText = (el.eExpiry.value || '').trim();
+    if (!name && !lot && !expiryText){
+      showNotification('Attenzione', 'Inserisci almeno un dato', false);
+      return;
+    }
+
+    saveToUndo();
+    p.name = name;
+    p.lot = lot;
+    p.expiryText = expiryText;
+    logEvent('edit', p);
+
+    saveProducts();
+    saveEvents();
+    rebuildGridIndex();
+    scheduleRenderAll();
+
+    try{ el.editDialog.close(); }catch(e){}
+    editTargetId = null;
+  });
+
+  // ====== Statistiche
+  function topN(obj, n=10){
+    return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+  }
+
+  function renderTop(container, pairs){
+    container.textContent = '';
+    if (!pairs.length){
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '12px 4px';
+      d.style.fontStyle = 'italic';
+      d.textContent = '—';
+      container.appendChild(d);
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    for(const [name,count] of pairs){
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.style.marginBottom = '10px';
+      div.innerHTML = `<div class="abbr">${name}</div>
+                       <div class="muted">Occorrenze: <strong>${count}</strong></div>`;
+      frag.appendChild(div);
+    }
+    container.appendChild(frag);
+  }
+
+  function renderStatsList(container, items){
+    container.textContent = '';
+    if (!items.length){
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '12px 4px';
+      d.style.fontStyle = 'italic';
+      d.textContent = '—';
+      container.appendChild(d);
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    for(const p of items){
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.style.marginBottom = '10px';
+      div.innerHTML = `<div class="abbr">${p.name || '(senza descrizione)'}</div>
+                       <div class="muted">🏷️ ${(p.lot||'—')} • Inserito: ${new Date(p.dateAdded).toLocaleDateString('it-IT')}</div>`;
+      frag.appendChild(div);
+    }
+    container.appendChild(frag);
+  }
+
+  function renderStatsView(){
+    if (!el.statsSummary) return;
+
+    let skull=0, red=0, yellow=0, green=0;
+    const listSkull=[], listRed=[], listYellow=[], listGreen=[];
+    for(const p of products){
+      if (!p.expiryText) continue;
+      const st = expiryStatus(p.expiryText);
+      if (!st) continue;
+      if (st.cls === 'skull'){ skull++; listSkull.push(p); }
+      else if (st.cls === 'red'){ red++; listRed.push(p); }
+      else if (st.cls === 'yellow'){ yellow++; listYellow.push(p); }
+      else if (st.cls === 'green'){ green++; listGreen.push(p); }
+    }
+    const sortByDays = (a,b) => (expiryStatus(a.expiryText).days) - (expiryStatus(b.expiryText).days);
+    listSkull.sort(sortByDays);
+    listRed.sort(sortByDays);
+    listYellow.sort(sortByDays);
+    listGreen.sort(sortByDays);
+
+    const addedCounts = {};
+    const removedCounts = {};
+    let dwellSum=0, dwellN=0;
+
+    for(const e of events){
+      if (!e || !e.type) continue;
+      const n = (e.name || '(senza nome)').trim() || '(senza nome)';
+      if (e.type === 'add') addedCounts[n] = (addedCounts[n]||0) + 1;
+      if (e.type === 'remove'){
+        removedCounts[n] = (removedCounts[n]||0) + 1;
+        if (e.dateAdded){
+          const da = new Date(e.dateAdded).getTime();
+          if (Number.isFinite(da)){
+            const days = Math.max(0, Math.ceil((e.t - da)/86400000));
+            dwellSum += days;
+            dwellN += 1;
+          }
+        }
+      }
+    }
+
+    el.statsSummary.textContent =
+      `Totale prodotti: ${products.length} • Con scadenza: ${skull+red+yellow+green} • ☠️ ${skull} • 🔴 ${red} • 🟡 ${yellow} • 🟢 ${green}`;
+
+    renderTop(el.statsTopAdded, topN(addedCounts, 10));
+    renderTop(el.statsTopRemoved, topN(removedCounts, 10));
+
+    el.statsAvgDwell.textContent = dwellN
+      ? `Tempo medio di giacenza (su eliminati): ${Math.round(dwellSum/dwellN)} giorni`
+      : `Tempo medio di giacenza (su eliminati): —`;
+
+    renderStatsList(el.statsListSkull, listSkull.slice(0,25));
+    renderStatsList(el.statsListRed, listRed.slice(0,25));
+    renderStatsList(el.statsListYellow, listYellow.slice(0,25));
+    renderStatsList(el.statsListGreen, listGreen.slice(0,25));
+  }
+
   function init(){
     products = normalizeProducts(loadProducts());
+    events = loadEvents();
     rebuildGridIndex();
     updateUndoButton();
     renderList();
@@ -1524,481 +1927,5 @@
   init();
 })();
 </script>
-
-<!-- ====== PATCH v7: tempo giacenza + scadenze + statistiche (aggiunta, non sostituzione) ====== -->
-<script>
-(function(){
-  // --- Config soglie (puoi cambiare qui)
-  const CFG = {
-    expiryRedDays: 7,
-    expiryYellowDays: 30,
-    ageYellowDays: 60,
-    ageRedDays: 180,
-    eventsKey: "warehouse_events_v7",
-    maxEvents: 8000,
-  };
-
-  // --- Event log (per statistiche reali)
-  let __events = [];
-  try { __events = JSON.parse(localStorage.getItem(CFG.eventsKey) || "[]"); } catch(e){ __events = []; }
-  function saveEvents(){
-    try { localStorage.setItem(CFG.eventsKey, JSON.stringify(__events.slice(-CFG.maxEvents))); } catch(e){}
-  }
-  function logEvent(ev){
-    try{
-      __events.push(Object.assign({ t: Date.now() }, ev));
-      saveEvents();
-    }catch(e){}
-  }
-
-  // --- helper tempo
-  const MS_DAY = 24*60*60*1000;
-  function daysBetween(aMs, bMs){ return Math.floor((bMs - aMs)/MS_DAY); }
-  function fmtDays(d){ return (d===1? "1 giorno" : d + " giorni"); }
-  function parseISODate(iso){ // YYYY-MM-DD -> ms
-    const t = Date.parse(iso);
-    return Number.isFinite(t) ? t : NaN;
-  }
-  function pill(text, cls){
-    const s = document.createElement('span');
-    s.className = 'pill ' + cls;
-    s.textContent = text;
-    s.style.marginRight = '6px';
-    return s;
-  }
-  function colorForAge(days){
-    if (days > CFG.ageRedDays) return 'red';
-    if (days > CFG.ageYellowDays) return 'yellow';
-    return 'green';
-  }
-  function colorForExpiry(daysLeft){
-    if (daysLeft <= CFG.expiryRedDays) return 'red';
-    if (daysLeft <= CFG.expiryYellowDays) return 'yellow';
-    return 'green';
-  }
-
-  // --- 1) Inietto input "Data Scadenza" nel form (senza toccare HTML base)
-  function injectExpiryField(){
-    const lotInput = document.getElementById('lot');
-    if (!lotInput) return;
-    if (document.getElementById('expiryDate')) return;
-
-    // prova a inserirlo vicino a lotto (stesso layout)
-    const wrapper = document.createElement('div');
-    wrapper.style.flex = '1';
-    wrapper.style.minWidth = '200px';
-    wrapper.innerHTML = `
-      <label for="expiryDate">Data Scadenza (opzionale)</label>
-      <input id="expiryDate" type="date" />
-    `;
-
-    // cerca la riga che contiene il lotto
-    const row = lotInput.closest('.row');
-    if (row) row.appendChild(wrapper);
-  }
-
-  // --- 2) Estendo normalizeProducts per preservare expiryDate e dateRemoved (se presenti)
-  function patchNormalizeProducts(){
-    if (typeof normalizeProducts !== 'function') return;
-    const __orig = normalizeProducts;
-    normalizeProducts = function(list){
-      const out = __orig(list);
-      // __orig crea oggetti nuovi senza expiryDate: la rimettiamo prendendola dall'input originale
-      // ma ci serve ricostruire correttamente: quindi rifacciamo mapping da list -> out via id
-      const map = new Map();
-      for (const p of (Array.isArray(list)?list:[])){
-        if (p && p.id) map.set(p.id, p);
-      }
-      for (const p of out){
-        const src = map.get(p.id) || {};
-        if (src.expiryDate && !p.expiryDate) p.expiryDate = String(src.expiryDate);
-        if (src.dateRemoved && !p.dateRemoved) p.dateRemoved = String(src.dateRemoved);
-      }
-      return out;
-    };
-  }
-
-  // --- 3) Estendo saveFromForm per salvare expiryDate + log add
-  function patchSaveFromForm(){
-    if (typeof saveFromForm !== 'function') return;
-    const __orig = saveFromForm;
-    saveFromForm = function(){
-      // intercetto dati prima che il base pulisca
-      const nameEl = document.getElementById('name');
-      const lotEl = document.getElementById('lot');
-      const expEl = document.getElementById('expiryDate');
-      const name = nameEl ? nameEl.value.trim() : '';
-      const lot = lotEl ? lotEl.value.trim() : '';
-      const expiryDate = expEl ? (expEl.value || '') : '';
-
-      // chiamo la logica base (crea prodotto e salva)
-      __orig();
-
-      // se è stato realmente aggiunto (name/lot presenti), log + aggiorna ultimo inserito
-      if (name || lot){
-        // Il base fa unshift, quindi products[0] dovrebbe essere il nuovo
-        try{
-          if (Array.isArray(products) && products[0]){
-            if (expiryDate) products[0].expiryDate = expiryDate;
-            // salva di nuovo con campo extra
-            try{ saveProducts(); }catch(e){}
-            logEvent({ type:'add', id: products[0].id, name: products[0].name, lot: products[0].lot, dateAdded: products[0].dateAdded, expiryDate: products[0].expiryDate || null });
-          }
-        }catch(e){}
-      }
-    };
-  }
-
-  // --- 4) Log delete/unplace/place: non posso cambiare handler già registrato,
-  // quindi intercetto click in capture per sapere l'id e poi wrappo showNotification.
-  let __pendingDeleteId = null;
-
-  function installCapture(){
-    const unp = document.getElementById('listUnplaced');
-    const plc = document.getElementById('listPlaced');
-    const handler = (e) => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-      if (action === 'del' && id){
-        __pendingDeleteId = id;
-      }
-      // log unplace/place immediato (non richiede conferma)
-      if ((action === 'unplace' || action === 'place') && id && Array.isArray(products)){
-        const p = products.find(x=>x.id===id);
-        if (p){
-          logEvent({ type: action, id, name: p.name, lot: p.lot, row: p.row, col: p.col });
-        }
-      }
-    };
-    if (unp) unp.addEventListener('click', handler, true);
-    if (plc) plc.addEventListener('click', handler, true);
-  }
-
-  function patchShowNotification(){
-    if (typeof showNotification !== 'function') return;
-    const __orig = showNotification;
-    showNotification = function(title, message, confirm, onConfirm){
-      // Se è la conferma di eliminazione, wrappo la callback per loggare
-      const isDeleteConfirm = confirm && typeof onConfirm === 'function' && typeof message === 'string' && message.toLowerCase().includes('eliminare questo prodotto');
-      if (isDeleteConfirm){
-        const id = __pendingDeleteId;
-        const wrapped = function(){
-          try{
-            if (id && Array.isArray(products)){
-              const p = products.find(x=>x.id===id);
-              if (p){
-                // prima che venga rimosso dal base, loggo i dati necessari (incluso tempo medio)
-                logEvent({ type:'remove', id, name: p.name, lot: p.lot, dateAdded: p.dateAdded, expiryDate: p.expiryDate || null });
-              }
-            }
-          }catch(e){}
-          __pendingDeleteId = null;
-          return onConfirm();
-        };
-        return __orig(title, message, confirm, wrapped);
-      }
-      return __orig(title, message, confirm, onConfirm);
-    };
-  }
-
-  // --- 5) Undo: estendo stack per includere snapshot eventi, senza modificare le funzioni originali (override)
-  function patchUndo(){
-    if (typeof saveToUndo !== 'function' || typeof undoLastAction !== 'function') return;
-    const __origSaveToUndo = saveToUndo;
-    const __origUndo = undoLastAction;
-
-    saveToUndo = function(){
-      try{
-        // prima chiamo originale (che push stato prodotti)
-        __origSaveToUndo();
-        // poi arricchisco l'ultimo elemento con snapshot eventi
-        if (Array.isArray(undoStack) && undoStack.length){
-          undoStack[undoStack.length-1].events = JSON.parse(JSON.stringify(__events));
-        }
-      }catch(e){}
-    };
-
-    undoLastAction = function(){
-      if (!Array.isArray(undoStack) || !undoStack.length) return __origUndo();
-      const last = undoStack[undoStack.length-1];
-      __origUndo();
-      try{
-        if (last && Array.isArray(last.events)){
-          __events = JSON.parse(JSON.stringify(last.events));
-          saveEvents();
-        }
-      }catch(e){}
-    };
-  }
-
-  // --- 6) Render: aggiungo pill "Scadenza" + "Giacenza" nella lista
-  function patchBuildListItem(){
-    if (typeof buildListItem !== 'function') return;
-    const __orig = buildListItem;
-    buildListItem = function(p, isPlaced){
-      const node = __orig(p, isPlaced);
-      try{
-        const detail = node.querySelector('[data-detail]');
-        if (detail){
-          const now = Date.now();
-          const addedMs = Date.parse(p.dateAdded);
-          if (Number.isFinite(addedMs)){
-            const ageDays = daysBetween(addedMs, now);
-            const ageCls = colorForAge(ageDays);
-            // Inserisco pills prima del testo già presente
-            const wrap = document.createElement('div');
-            wrap.style.marginTop = '6px';
-            wrap.style.display = 'flex';
-            wrap.style.flexWrap = 'wrap';
-            wrap.style.gap = '6px';
-
-            // scadenza
-            if (p.expiryDate){
-              const expMs = parseISODate(p.expiryDate);
-              if (Number.isFinite(expMs)){
-                const daysLeft = daysBetween(now, expMs);
-                const expCls = colorForExpiry(daysLeft);
-                const label = (daysLeft < 0) ? `Scaduto da ${fmtDays(Math.abs(daysLeft))}` : `Scade tra ${fmtDays(daysLeft)}`;
-                wrap.appendChild(pill(label, expCls));
-              }
-            }
-            wrap.appendChild(pill(`Giacenza: ${fmtDays(ageDays)}`, ageCls));
-
-            detail.appendChild(wrap);
-          }
-        }
-      }catch(e){}
-      return node;
-    };
-  }
-
-  // --- 7) Aggiungo tab "Statistiche" e vista
-  function injectStatsTab(){
-    const tabs = document.querySelector('nav.tabs');
-    const viewLista = document.getElementById('view-lista');
-    const main = document.querySelector('main');
-    if (!tabs || !viewLista || !main) return;
-
-    if (document.getElementById('tab-stats')) return;
-
-    const btn = document.createElement('button');
-    btn.className = 'tab';
-    btn.id = 'tab-stats';
-    btn.type = 'button';
-    btn.textContent = 'Statistiche';
-
-    tabs.appendChild(btn);
-
-    const section = document.createElement('section');
-    section.id = 'view-stats';
-    section.style.display = 'none';
-    section.innerHTML = `
-      <div class="card">
-        <h3 class="section" style="margin-top:0">Statistiche</h3>
-        <div class="muted" style="margin-top:6px">Basate sugli eventi (inserimenti / eliminazioni) salvati in locale.</div>
-      </div>
-
-      <div class="card" id="statsSummary"></div>
-
-      <div class="card">
-        <h3 class="section">Top inseriti</h3>
-        <div id="statsTopAdd"></div>
-      </div>
-
-      <div class="card">
-        <h3 class="section">Top eliminati</h3>
-        <div id="statsTopRemove"></div>
-      </div>
-
-      <div class="card">
-        <h3 class="section">In scadenza (più vicini)</h3>
-        <div id="statsExpSoon"></div>
-      </div>
-
-      <div class="card">
-        <h3 class="section">Lunga giacenza (più vecchi)</h3>
-        <div id="statsOldStock"></div>
-      </div>
-    `;
-    main.appendChild(section);
-
-    // switch tab senza toccare switchTab originale: intercetto click e gestisco io
-    btn.addEventListener('click', () => {
-      // disattiva tutti
-      document.querySelectorAll('nav.tabs .tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-
-      // nascondi viste note
-      const viewMappa = document.getElementById('view-mappa');
-      viewLista.style.display = 'none';
-      if (viewMappa) viewMappa.style.display = 'none';
-      section.style.display = '';
-
-      renderStats();
-    });
-
-    // quando clicchi sugli altri tab, nascondi stats (listener passivo)
-    const tabLista = document.getElementById('tab-lista');
-    const tabMappa = document.getElementById('tab-mappa');
-    function hideStats(){
-      if (!btn.classList.contains('active')) return;
-      section.style.display = 'none';
-    }
-    if (tabLista) tabLista.addEventListener('click', () => { section.style.display='none'; }, true);
-    if (tabMappa) tabMappa.addEventListener('click', () => { section.style.display='none'; }, true);
-  }
-
-  function renderStats(){
-    const summary = document.getElementById('statsSummary');
-    const topAdd = document.getElementById('statsTopAdd');
-    const topRem = document.getElementById('statsTopRemove');
-    const expSoon = document.getElementById('statsExpSoon');
-    const oldStock = document.getElementById('statsOldStock');
-    if (!summary || !topAdd || !topRem || !expSoon || !oldStock) return;
-
-    const addCount = new Map();
-    const remCount = new Map();
-    let removedSamples = 0;
-    let totalAgeDays = 0;
-
-    for (const ev of __events){
-      if (!ev || !ev.type) continue;
-      const key = (ev.name || '').trim() || '(senza nome)';
-      if (ev.type === 'add'){
-        addCount.set(key, (addCount.get(key)||0)+1);
-      } else if (ev.type === 'remove'){
-        remCount.set(key, (remCount.get(key)||0)+1);
-        // tempo giacenza reale solo se abbiamo dateAdded
-        if (ev.dateAdded){
-          const a = Date.parse(ev.dateAdded);
-          if (Number.isFinite(a)){
-            const age = daysBetween(a, ev.t || Date.now());
-            totalAgeDays += Math.max(0, age);
-            removedSamples++;
-          }
-        }
-      }
-    }
-
-    const now = Date.now();
-    const inStock = Array.isArray(products) ? products.slice() : [];
-    // scadenze vicine
-    const expList = inStock
-      .filter(p=>p && p.expiryDate)
-      .map(p=>{
-        const ms = parseISODate(p.expiryDate);
-        const daysLeft = Number.isFinite(ms) ? daysBetween(now, ms) : null;
-        return { p, daysLeft };
-      })
-      .filter(x=>x.daysLeft!=null)
-      .sort((a,b)=>a.daysLeft-b.daysLeft)
-      .slice(0, 10);
-
-    // lunga giacenza
-    const oldList = inStock
-      .map(p=>{
-        const a = Date.parse(p.dateAdded);
-        const age = Number.isFinite(a) ? daysBetween(a, now) : 0;
-        return { p, age };
-      })
-      .sort((a,b)=>b.age-a.age)
-      .slice(0, 10);
-
-    function renderTop(map, container){
-      const arr = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]).slice(0,10);
-      container.innerHTML = arr.length ? '' : '<div class="muted">Nessun dato ancora.</div>';
-      for (const [name,count] of arr){
-        const d = document.createElement('div');
-        d.style.display = 'flex';
-        d.style.justifyContent = 'space-between';
-        d.style.padding = '8px 0';
-        d.style.borderBottom = '1px solid #eef2ff';
-        d.innerHTML = `<div style="font-weight:700">${escapeHtml(name)}</div><div class="muted">${count}</div>`;
-        container.appendChild(d);
-      }
-    }
-
-    function renderList(arr, container, kind){
-      container.innerHTML = arr.length ? '' : '<div class="muted">Nessun elemento.</div>';
-      for (const it of arr){
-        const d = document.createElement('div');
-        d.style.padding = '10px 0';
-        d.style.borderBottom = '1px solid #eef2ff';
-        const name = escapeHtml(it.p.name || '(senza descrizione)');
-        const lot = escapeHtml(it.p.lot || '—');
-        if (kind === 'exp'){
-          const daysLeft = it.daysLeft;
-          const cls = colorForExpiry(daysLeft);
-          const label = (daysLeft < 0) ? `Scaduto da ${fmtDays(Math.abs(daysLeft))}` : `Scade tra ${fmtDays(daysLeft)}`;
-          d.innerHTML = `<div style="font-weight:700">${name}</div><div class="muted">🏷️ ${lot}</div>`;
-          d.appendChild(pill(label, cls));
-        } else {
-          const cls = colorForAge(it.age);
-          d.innerHTML = `<div style="font-weight:700">${name}</div><div class="muted">🏷️ ${lot}</div>`;
-          d.appendChild(pill(`Giacenza: ${fmtDays(it.age)}`, cls));
-        }
-        container.appendChild(d);
-      }
-    }
-
-    const avg = removedSamples ? Math.round(totalAgeDays/removedSamples) : null;
-
-    summary.innerHTML = `
-      <h3 class="section" style="margin-top:0">Riepilogo</h3>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
-        <div class="card" style="padding:12px; margin:0">
-          <div class="muted">Prodotti attuali</div>
-          <div style="font-size:1.4rem; font-weight:800">${inStock.length}</div>
-        </div>
-        <div class="card" style="padding:12px; margin:0">
-          <div class="muted">Tempo medio giacenza (su eliminati)</div>
-          <div style="font-size:1.4rem; font-weight:800">${avg==null ? '—' : (avg + ' gg')}</div>
-        </div>
-        <div class="card" style="padding:12px; margin:0">
-          <div class="muted">Eventi registrati</div>
-          <div style="font-size:1.4rem; font-weight:800">${__events.length}</div>
-        </div>
-        <div class="card" style="padding:12px; margin:0">
-          <div class="muted">Soglie</div>
-          <div class="muted" style="line-height:1.35">
-            Scadenza: 🔴 ≤ ${CFG.expiryRedDays}g, 🟡 ≤ ${CFG.expiryYellowDays}g<br>
-            Giacenza: 🟡 > ${CFG.ageYellowDays}g, 🔴 > ${CFG.ageRedDays}g
-          </div>
-        </div>
-      </div>
-    `;
-
-    renderTop(addCount, topAdd);
-    renderTop(remCount, topRem);
-    renderList(expList, expSoon, 'exp');
-    renderList(oldList, oldStock, 'age');
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // --- init patch
-  function init(){
-    injectExpiryField();
-    patchNormalizeProducts();
-    patchSaveFromForm();
-    installCapture();
-    patchShowNotification();
-    patchUndo();
-    patchBuildListItem();
-    injectStatsTab();
-
-    // quando si renderizza, la lista ora include pills
-    try{ scheduleRenderAll(); }catch(e){}
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
 </body>
 </html>
