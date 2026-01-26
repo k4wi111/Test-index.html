@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>IO Sano</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  
+  <meta name="apple-mobile-web-app-title" content="IO Sano"/>
+  <meta name="application-name" content="IO Sano"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#667eea"/>
+  <link rel="manifest" href="manifest.webmanifest"/>
+
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png"/>
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png"/>
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png"/>
+    <link rel="apple-touch-icon" href="icons/icon-180.png"/>
+<link type="image/png" rel="icon" sizes="192x192" href="icons/icon-192.png"/>
+  <link type="image/png" rel="icon" sizes="512x512" href="icons/icon-512.png"/>
+
+  <style>
+
+    :root {
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --card-border: rgba(255, 255, 255, 0.55);
+
+      --primary-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --danger-grad: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      --success-grad: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      --orange-grad: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --silver-grad: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+
+      --radius-lg: 20px;
+      --radius-md: 12px;
+
+      /* ombre più leggere = meno lavoro GPU su iOS */
+      --shadow-soft: 0 8px 28px rgba(31, 38, 135, 0.12);
+
+      --cell-w: 110pt;
+      --cell-h: 55pt;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      background: var(--bg-gradient);
+      /* tolto background-attachment: fixed (spesso lagga su iOS/iPadOS) */
+      color: var(--text-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 80px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header: tolto backdrop-filter blur (principale fonte di sfarfallii su Safari) */
+    header {
+      background: rgba(255, 255, 255, 0.14);
+      border-bottom: 1px solid rgba(255,255,255,0.28);
+      padding: 1.2rem 1.5rem;
+      padding-top: calc(1.2rem + env(safe-area-inset-top));
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.12);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tabs: tolto blur */
+    .tabs {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      position: sticky;
+      top: calc(70px + env(safe-area-inset-top));
+      z-index: 40;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px 20px;
+      border-radius: 40px;
+      border: 2px solid rgba(255,255,255,0.10);
+      background: rgba(255, 255, 255, 0.20);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.15s ease, color 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+      user-select: none;
+    }
+    .tab.active {
+      background: white;
+      color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      border-color: white;
+    }
+    .tab:not(.active):active { transform: scale(0.98); }
+
+    .card {
+      background: var(--card-bg);
+      /* tolto blur */
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.12s ease;
+    }
+    .card:active { transform: scale(0.99); }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: #4b5563;
+      margin-bottom: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input[type=text], input[type=number], select {
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 1rem;
+      border: 2px solid #c7d2fe;
+      border-radius: var(--radius-md);
+      background: #e5edff;
+      color: #1f2937;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+      font-weight: 500;
+      outline: none;
+    }
+    input:focus, select:focus {
+      background: white;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.30);
+    }
+    input::placeholder { color: #9ca3af; font-weight: 400; }
+
+    /* Campi MAPPA (già migliorati): li lasciamo marcati */
+    #cellDialog input[type=text],
+    #colDialog select {
+      background: #e5edff;
+      border-color: #c7d2fe;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+    }
+    #cellDialog input[type=text]:focus,
+    #colDialog select:focus {
+      background: #ffffff;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.30);
+    }
+
+    button {
+      padding: 12px 22px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      transition: transform 0.10s ease, opacity 0.12s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    button:active { transform: scale(0.97); }
+
+    button:not(.ghost):not(.alt):not(.danger):not(.action-btn):not(.remove-grid):not(.go-to-map):not(.secondary) {
+      background: var(--primary-grad);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.25);
+    }
+
+    button.ghost {
+      background: white;
+      border: 2px solid #e5e7eb;
+      color: #4b5563;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    button.secondary {
+      background: var(--silver-grad);
+      border: 2px solid #d1d5db;
+      color: #374151;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    button.danger {
+      background: var(--danger-grad);
+      color: white;
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.30);
+    }
+
+    button.alt, button.add-grid {
+      background: var(--success-grad);
+      color: white;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
+    }
+
+    button.remove-grid {
+      background: var(--orange-grad);
+      color: white;
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.28);
+    }
+
+    button.go-to-map {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: white;
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.28);
+    }
+
+    .list-item .row button {
+      flex: 1;
+      height: 42px;
+      padding: 0 12px;
+      font-size: 0.9rem;
+      border-radius: 10px;
+      width: 100%;
+    }
+
+    /* tolta animazione slideIn (ricostruzioni lista = flicker) */
+    .list-item {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      background: white;
+      margin-bottom: 14px;
+      border-left: 5px solid #e5e7eb;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transition: transform 0.12s ease, border-left-color 0.12s ease;
+    }
+    @media (min-width: 600px) {
+      .list-item {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .list-item .row {
+        width: auto;
+        min-width: 280px;
+      }
+    }
+    .list-item:active {
+      transform: scale(0.99);
+      border-left-color: #667eea;
+    }
+    .abbr { font-weight: 700; color: #111827; font-size: 1.1rem; }
+    .muted { color: #6b7280; font-size: 0.9rem; margin-top: 4px; }
+    /* Lotto più visibile nella lista */
+    .list-item [data-detail]{ font-weight: 600; }
+
+
+    .grid-wrap { overflow-x: auto; padding-bottom: 15px; }
+    .grid-scroll {
+      -webkit-overflow-scrolling: touch; min-width: min-content; }
+    .grid { display: grid; gap: 12px; grid-auto-rows: var(--cell-h); }
+    /* ====== assi numerati (mappa) ====== */
+    .grid-frame{
+      --axis-w: 34px;
+      --axis-h: 28px;
+      display: grid;
+      grid-template-columns: var(--axis-w) auto var(--axis-w);
+      grid-template-rows: var(--axis-h) auto var(--axis-h);
+      gap: 12px;
+      align-items: start;
+    }
+    .axis{
+      display: grid;
+      gap: 12px;
+    }
+    .axis-top, .axis-bottom{
+      align-items: center;
+    }
+    .axis-left, .axis-right{
+      grid-auto-rows: var(--cell-h);
+      align-items: center;
+    }
+    .axis-corner{
+      width: var(--axis-w);
+      height: var(--axis-h);
+    }
+    .axis-cell{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      color: #4338ca;
+      background: rgba(102, 126, 238, 0.16);
+      border: 1px solid rgba(102, 126, 238, 0.30);
+      user-select: none;
+    }
+    .axis-top .axis-cell, .axis-bottom .axis-cell{
+      height: var(--axis-h);
+    }
+    .axis-left .axis-cell, .axis-right .axis-cell{
+      height: 100%;
+    }
+
+
+    .cell {
+      overflow: hidden;
+      width: var(--cell-w);
+      height: var(--cell-h);
+      border-radius: 12px;
+      border: 3px solid rgba(0,0,0,0.06);
+      background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(249,250,251,0.92) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      user-select: none;
+    }
+    .cell:active { transform: scale(0.95); border-color: #7c3aed; }
+    .cell.occ {
+      background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+      border-color: #8b5cf6;
+      border-bottom-width: 5px;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.12);
+    }
+    .cell.occ .name { color: #6d28d9; font-weight: 700; }
+    .cell .name {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 1.15;
+      /* Permette al testo di andare a capo (niente puntini) */
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      max-width: 100%;
+      /* Limite “morbido” a ~2 righe per non spingere fuori Lotto */
+      max-height: 2.35em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      /* Riserva sempre spazio per 2 righe, così il Lotto finisce sempre in basso */
+      min-height: 2.35em;
+
+    }
+    .cell .lot { margin-top: auto; font-size: 12px; font-weight: 600; opacity: 0.85; }
+
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .row { display: flex; gap: 12px; width: 100%; flex-wrap: wrap; }
+    .action-bar { display: flex; gap: 12px; width: 100%; flex-wrap: wrap; }
+
+    .action-btn {
+      flex: 1;
+      height: 50px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: #374151;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.10s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      user-select: none;
+    }
+    .action-btn.pdf { background: var(--danger-grad); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.28); }
+    .action-btn.import { background: var(--success-grad); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.26); }
+    .action-btn:active { transform: scale(0.98); }
+    .action-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .pill {
+      background: white;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      color: #4b5563;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 2px solid #e5e7eb;
+    }
+    .badge {
+      background: var(--success-grad);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.30);
+    }
+
+    h3.section {
+      margin: 30px 0 20px;
+      font-size: 1.35rem;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+    }
+    h3.section::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.18);
+    }
+
+    dialog {
+      background: rgba(255,255,255,0.98);
+      border: 2px solid rgba(255,255,255,0.6);
+      border-radius: 24px;
+      padding: 32px;
+      width: 450px;
+      max-width: 92%;
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
+      /* tolto blur */
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    dialog::backdrop { background: rgba(30, 27, 75, 0.7); }
+    dialog h3 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+    }
+
+    #cellDialog .row { justify-content: stretch; }
+    #cellDialog .row button {
+      flex: 1 1 45%;
+      min-width: 140px;
+      white-space: normal;
+      height: auto;
+      padding: 14px 10px;
+    }
+
+    #notification-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    #notification-modal.show { visibility: visible; opacity: 1; }
+    .modal-content {
+      background: white;
+      padding: 36px;
+      border-radius: 24px;
+      width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+      transform: scale(0.98);
+      transition: transform 0.15s ease;
+    }
+    #notification-modal.show .modal-content { transform: scale(1); }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.9);
+      margin-top: 50px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    footer strong { color: white; font-weight: 700; }
+
+    footer.install {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      padding: 18px;
+      display: none;
+      box-shadow: 0 -15px 40px -5px rgba(0,0,0,0.15);
+      z-index: 100;
+      justify-content: space-between;
+      align-items: center;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      .tabs { padding: 15px; gap: 10px; }
+      .tab { padding: 12px 16px; font-size: 0.9rem; }
+      h3.section { font-size: 1.2rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+      .tab.active { transform: none; }
+      button:active, .cell:active, .list-item:active, .card:active { transform: none; }
+      #notification-modal, .modal-content { transition: none !important; }
+    }
+  
+  
+  /* ===== Aggiunte: pill scadenza/giacenza (additive) ===== */
+  .tagline { margin-top: 8px; display:flex; gap:10px; flex-wrap:wrap; }
+  .tag {
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 6px 12px; border-radius: 999px;
+    font-size: 0.82rem; font-weight: 800;
+    background: #fff; border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    color: #374151;
+  }
+  .tag.red { border-color: rgba(239,68,68,0.55); color:#991b1b; }
+  .tag.yellow { border-color: rgba(245,158,11,0.55); color:#92400e; }
+  .tag.green { border-color: rgba(16,185,129,0.55); color:#065f46; }
+  .tag.skull { border-color: rgba(0,0,0,0.35); color:#111827; }
+  .smallmeta { margin-top:6px; font-size:0.82rem; color:#6b7280; font-weight:700; }
+
+</style>
+</head>
+<body>
+<header>
+  <div><h1>IO Sano</h1></div>
+  <button class="ghost" id="undoBtn" style="display:none; padding: 8px 16px; font-size: 0.85rem; border-radius: 25px;">↶ Annulla</button>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" id="tab-lista" type="button">Lista Prodotti</button>
+  <button class="tab" id="tab-mappa" type="button">Mappa</button>
+    <button class="tab" id="tab-prelievo" type="button">Prelievo</button>
+<button class="tab" id="tab-stats" type="button">Statistiche</button>
+</nav>
+
+<main>
+  <section id="view-lista">
+    <div class="card">
+      <h3 class="section" style="margin-top:0">Nuovo Inserimento</h3>
+      <div class="row" style="align-items:flex-end; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px">
+          <label for="name">Descrizione Prodotto</label>
+          <input id="name" placeholder="Nome prodotto..." type="text" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div style="flex:1; min-width:200px">
+          <label for="lot">Numero Lotto</label>
+          <input id="lot" placeholder="Numero lotto..." type="text" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div style="flex:1; min-width:200px">
+          <label for="expiry">Data Scadenza</label>
+          <input id="expiry" placeholder="Es: GEN/26 oppure GEN/26-FEB/26" type="text" autocomplete="off" spellcheck="false"/>
+        </div>
+      </div>
+      <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
+        <button class="ghost" id="clearBtn" type="button">Pulisci</button>
+        <button id="saveBtn" type="button" style="min-width: 120px;">Salva</button>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 20px 28px;">
+      <div style="position:relative;">
+        <input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
+        <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
+      </div>
+      <div class="toolbar" style="justify-content:flex-end">
+        <button class="ghost" id="resetSearchBtn" type="button" style="font-size:0.85rem; padding: 8px 14px;">Resetta filtri</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="action-bar">
+        <button id="exportPdfBtn" class="action-btn pdf" type="button">PDF</button>
+        <button id="exportJsonBtn" class="action-btn" type="button" style="background: #4b5563;">JSON</button>
+        <button class="action-btn import" type="button">
+          Importa
+          <input id="importJsonFile" type="file" accept="application/json"/>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Prodotti su scaffali</h3>
+      <div id="listUnplaced"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Prodotti a terra</h3>
+      <div id="listPlaced"></div>
+    </div>
+  </section>
+
+  <section id="view-mappa" style="display:none">
+    <div class="card">
+      <div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display:flex; gap:10px">
+          <div class="pill">Righe: 7</div>
+          <div class="pill">Colonne: 10</div>
+        </div>
+        <div class="badge" id="occupiedBadge">Occupate: 0</div>
+      </div>
+    </div>
+
+    <div class="card grid-wrap">
+      <div class="grid-scroll">
+        <div class="grid-frame" id="gridFrame">
+          <div class="axis-corner" aria-hidden="true"></div>
+          <div class="axis axis-top" id="axisTop" aria-label="Numeri colonne sopra"></div>
+          <div class="axis-corner" aria-hidden="true"></div>
+
+          <div class="axis axis-left" id="axisLeft" aria-label="Numeri righe sinistra"></div>
+          <div class="grid" id="grid"></div>
+          <div class="axis axis-right" id="axisRight" aria-label="Numeri righe destra"></div>
+
+          <div class="axis-corner" aria-hidden="true"></div>
+          <div class="axis axis-bottom" id="axisBottom" aria-label="Numeri colonne sotto"></div>
+          <div class="axis-corner" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  
+  <section id="view-prelievo" style="display:none">
+    <div class="card">
+      <h3 class="section" style="margin-top:0">Prelievo</h3>
+      <div id="prelievoEmpty" class="muted" style="padding:14px;text-align:center">Nessun prodotto in prelievo</div>
+      <div id="prelievoList"></div>
+    </div>
+  </section>
+
+<section id="view-stats" style="display:none">
+    <div class="card">
+      <h3 class="section" style="margin-top:0">Statistiche</h3>
+      <div id="statsSummary" class="muted" style="font-weight:700"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Top inseriti / eliminati</h3>
+      <div class="row" style="gap:14px; align-items:stretch">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">Top inseriti</div>
+          <div id="statsTopAdded"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">Top eliminati</div>
+          <div id="statsTopRemoved"></div>
+        </div>
+      </div>
+      <div id="statsAvgDwell" class="muted" style="margin-top:14px; font-weight:700"></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section">Raggruppamento scadenze</h3>
+      <div class="row" style="gap:14px">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">☠️ Scaduti</div>
+          <div id="statsListSkull"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🔴 Rossi (&lt; 6 mesi)</div>
+          <div id="statsListRed"></div>
+        </div>
+      </div>
+      <div class="row" style="gap:14px; margin-top:14px">
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🟡 Gialli (6–9 mesi)</div>
+          <div id="statsListYellow"></div>
+        </div>
+        <div style="flex:1; min-width:240px">
+          <div class="pill" style="margin-bottom:10px; display:inline-block">🟢 Verdi (&gt; 9 mesi)</div>
+          <div id="statsListGreen"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="install" id="installBar">
+  <span style="font-weight:600; color:#374151">Installa app per uso offline.</span>
+  <button id="installBtn" type="button" style="background:var(--primary-grad); color:white; border-radius:25px; box-shadow:none;">Installa Ora</button>
+</footer>
+
+<footer>
+  Applicazione ideata e sviluppata da <strong>Fabio Barbieri</strong>
+</footer>
+
+<template id="list-item-tpl">
+  <div class="list-item">
+    <div style="min-width:0">
+      <div class="abbr"></div>
+      <div class="muted" data-detail=""></div>
+    </div>
+    <div class="row" data-btns="" style="flex:0 0 auto; gap:8px"></div>
+  </div>
+</template>
+
+<dialog id="cellDialog">
+  <form method="dialog">
+    <h3 id="cellTitle">Dettaglio Cella</h3>
+    <label for="dName">Descrizione</label>
+    <input id="dName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
+    <label for="dLot">Lotto</label>
+    <input id="dLot" type="text" autocomplete="off" spellcheck="false"/>
+    <label for="dExpiry" style="margin-top:12px">Data Scadenza</label>
+    <input id="dExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
+    <div class="row" style="margin-top:24px;"></div>
+  </form>
+</dialog>
+
+<dialog id="colDialog">
+  <form method="dialog">
+    <h3>Scegli colonna</h3>
+    <label for="colSelect">Colonna di destinazione</label>
+    <select id="colSelect" style="margin-bottom:20px"></select>
+    <div class="row" style="margin-top:24px; justify-content: flex-end;">
+      <button class="ghost" type="button" id="colCancel">Annulla</button>
+      <button type="button" id="colOk" class="alt">Conferma Spostamento</button>
+    </div>
+  </form>
+</dialog>
+
+
+<dialog id="editDialog">
+  <form method="dialog">
+    <h3>Modifica Prodotto</h3>
+    <label for="eName">Descrizione</label>
+    <input id="eName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
+    <label for="eLot">Lotto</label>
+    <input id="eLot" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
+    <label for="eExpiry">Data Scadenza</label>
+    <input id="eExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
+    <div class="row" style="margin-top:24px; justify-content:flex-end;">
+      <button class="ghost" type="button" id="eCancel">Annulla</button>
+      <button type="button" id="eSave" class="alt">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="notification-modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">Titolo</h3>
+    <p id="modalMessage" style="color: #6b7280; margin: 16px 0 24px;">Messaggio</p>
+    <div class="row" style="justify-content: flex-start; gap: 10px;">
+      <button class="ghost" id="modalCancelBtn" type="button">Annulla</button>
+      <button id="modalConfirmBtn" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ====== util
+  const $ = (id) => document.getElementById(id);
+  const debounce = (fn, wait=140) => {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  };
+  const deepClone = (obj) => {
+    if (typeof structuredClone === 'function') return structuredClone(obj);
+    return JSON.parse(JSON.stringify(obj));
+  };
+  const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+  // ====== Lotto -> data di produzione (giorno dell'anno)
+  function parseLottoToDate(lotto, expiryText){
+    if (!lotto) return null;
+
+    // Numero iniziale = giorno dell'anno
+    const mDay = String(lotto).match(/^(\d{1,3})/);
+    if (!mDay) return null;
+    const dayOfYear = parseInt(mDay[1], 10);
+    if (dayOfYear < 1 || dayOfYear > 366) return null;
+
+    // Anno da /YY (prioritario)
+    let year = null;
+    const mYear = String(lotto).match(/\/(\d{2})/);
+    if (mYear){
+      year = 2000 + parseInt(mYear[1], 10);
+    } else if (expiryText){
+      const d = parseExpiryText(expiryText);
+      if (d) year = d.getFullYear();
+    }
+    if (!year) return null;
+
+    const date = new Date(year, 0, 1);
+    date.setDate(dayOfYear);
+    date.setHours(0,0,0,0);
+    return date;
+  }
+
+  function daysSinceProduction(p){
+    const d = parseLottoToDate(p.lot, p.expiryText);
+    if (!d) return null;
+    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+  }
+
+
+  // ====== scadenza (testo: GEN/26) + giacenza
+  const EXP_MONTHS = { GEN:0,FEB:1,MAR:2,APR:3,MAG:4,GIU:5,LUG:6,AGO:7,SET:8,OTT:9,NOV:10,DIC:11 };
+
+  function parseExpiryText(text){
+    if(!text) return null;
+    const m = String(text).toUpperCase().match(/(GEN|FEB|MAR|APR|MAG|GIU|LUG|AGO|SET|OTT|NOV|DIC)[\s\/-]?(\d{2})/);
+    if(!m) return null;
+    const year = 2000 + parseInt(m[2], 10);
+    const month = EXP_MONTHS[m[1]];
+    return new Date(year, month + 1, 0, 23,59,59);
+  }
+
+  // ====== Fonte di verità: stato scadenza (una sola logica per lista/mappa/statistiche)
+  function getExpiryStatus(expiryText){
+    const d = parseExpiryText(expiryText);
+    if(!d) return null;
+
+    const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+
+    if (days < 0) return { cls:'skull', days, label:`☠️ Scaduto da ${Math.abs(days)}g` };
+    if (days < 180) return { cls:'red', days, label:`🔴 Scad: ${expiryText} (${days}g)` };
+    if (days < 270) return { cls:'yellow', days, label:`🟡 Scad: ${expiryText} (${days}g)` };
+    return { cls:'green', days, label:`🟢 Scad: ${expiryText} (${days}g)` };
+  }
+function expiryStatus(text){
+    return getExpiryStatus(text);
+  }
+
+  function daysSinceISO(iso){
+    const t = new Date(iso).getTime();
+    if(!Number.isFinite(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t)/86400000));
+  }
+  function giacenzaStatus(days){
+    if (days == null) return null;
+    if (days > 180) return { cls:'red', label:`🔴 Giacenza: ${days}g` };
+    if (days > 60)  return { cls:'yellow', label:`🟡 Giacenza: ${days}g` };
+    return { cls:'green', label:`🟢 Giacenza: ${days}g` };
+  }
+
+
+  // Lazy-load jsPDF (evita peso all'avvio)
+  let jsPDF = null;
+  let jsPDFLoading = null;
+  function loadJsPDF(){
+    if (jsPDF) return Promise.resolve(jsPDF);
+    if (jsPDFLoading) return jsPDFLoading;
+    jsPDFLoading = new Promise((resolve, reject) => {
+      // se già presente
+      if (window.jspdf && window.jspdf.jsPDF){
+        jsPDF = window.jspdf.jsPDF;
+        resolve(jsPDF);
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = './jspdf.umd.min.js';
+      s.async = true;
+      s.onload = () => {
+        if (window.jspdf && window.jspdf.jsPDF){
+          jsPDF = window.jspdf.jsPDF;
+          resolve(jsPDF);
+        } else reject(new Error('jsPDF non disponibile'));
+      };
+      s.onerror = () => reject(new Error('Impossibile caricare jspdf.umd.min.js'));
+      document.head.appendChild(s);
+    });
+    return jsPDFLoading;
+  }
+
+  // ====== costanti
+  const rows = 7, cols = 10;
+  const LS_KEY = "warehouse_products_v6";
+  const LS_EVENTS_KEY = "warehouse_events_v1";
+
+  // ====== stato
+  let products = [];
+  let events = []; // storico eventi (add/remove/edit)
+  let undoStack = []; // snapshot
+  let gridMap = new Map(); // key: "r,c" -> product id
+
+  // ====== DOM cache
+  const el = {
+    undoBtn: $('undoBtn'),
+    tabLista: $('tab-lista'),
+    tabMappa: $('tab-mappa'),
+    tabStats: $('tab-stats'),
+    tabPrelievo: $('tab-prelievo'),
+    viewLista: $('view-lista'),
+    viewMappa: $('view-mappa'),
+    viewStats: $('view-stats'),
+    viewPrelievo: $('view-prelievo'),
+
+    name: $('name'),
+    lot: $('lot'),
+    expiry: $('expiry'),
+    clearBtn: $('clearBtn'),
+    saveBtn: $('saveBtn'),
+
+    search: $('search'),
+    resetSearchBtn: $('resetSearchBtn'),
+    listUnplaced: $('listUnplaced'),
+    listPlaced: $('listPlaced'),
+
+    exportPdfBtn: $('exportPdfBtn'),
+    exportJsonBtn: $('exportJsonBtn'),
+    importJsonFile: $('importJsonFile'),
+
+    grid: $('grid'),
+    axisTop: $('axisTop'),
+    axisBottom: $('axisBottom'),
+    axisLeft: $('axisLeft'),
+    axisRight: $('axisRight'),
+    occupiedBadge: $('occupiedBadge'),
+
+    cellDialog: $('cellDialog'),
+    cellTitle: $('cellTitle'),
+    dName: $('dName'),
+    dLot: $('dLot'),
+    dExpiry: $('dExpiry'),
+
+    colDialog: $('colDialog'),
+    colSelect: $('colSelect'),
+    colCancel: $('colCancel'),
+    colOk: $('colOk'),
+
+    modal: $('notification-modal'),
+    modalTitle: $('modalTitle'),
+    modalMessage: $('modalMessage'),
+    modalConfirmBtn: $('modalConfirmBtn'),
+    modalCancelBtn: $('modalCancelBtn'),
+
+    installBar: $('installBar'),
+    installBtn: $('installBtn'),
+
+    tpl: $('list-item-tpl'),
+    editDialog: $('editDialog'),
+    eName: $('eName'),
+    eLot: $('eLot'),
+    eExpiry: $('eExpiry'),
+    eCancel: $('eCancel'),
+    eSave: $('eSave'),
+
+    statsSummary: $('statsSummary'),
+    statsTopAdded: $('statsTopAdded'),
+    statsTopRemoved: $('statsTopRemoved'),
+    statsAvgDwell: $('statsAvgDwell'),
+    statsListSkull: $('statsListSkull'),
+    statsListRed: $('statsListRed'),
+    statsListYellow: $('statsListYellow'),
+    statsListGreen: $('statsListGreen'),
+  };
+
+  // ====== notifiche
+  function closeCellDialogSafely(){
+    try{
+      const cd = el.cellDialog;
+      if(!cd) return;
+      try { cd.close(); } catch(e) {}
+      try { cd.open = false; } catch(e) {}
+      cd.removeAttribute('open');
+      cd.style.display = 'none';
+      setTimeout(() => { cd.style.display = ''; }, 0);
+    }catch(e){}
+  }
+
+  function showNotification(title, message, isConfirm, onConfirm) {
+    el.modalTitle.textContent = title;
+    el.modalMessage.textContent = message;
+
+    if (isConfirm) {
+      el.modalConfirmBtn.style.display = 'inline-flex';
+      el.modalCancelBtn.style.display = 'inline-flex';
+      el.modalConfirmBtn.textContent = 'OK';
+
+      el.modalConfirmBtn.onclick = () => {
+        el.modal.classList.remove('show');
+        if (onConfirm) onConfirm();
+        closeCellDialogSafely();
+      };
+      el.modalCancelBtn.onclick = () => { el.modal.classList.remove('show'); };
+    } else {
+      el.modalConfirmBtn.style.display = 'inline-flex';
+      el.modalCancelBtn.style.display = 'none';
+      el.modalConfirmBtn.textContent = 'Chiudi';
+      el.modalConfirmBtn.onclick = () => { el.modal.classList.remove('show'); };
+    }
+    el.modal.classList.add('show');
+  }
+
+  // ====== storage
+  function loadProducts(){
+    for(const key of ["warehouse_products_v6","warehouse_products_v5"]){
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) continue;
+        const data = JSON.parse(raw);
+        if (Array.isArray(data)){
+          localStorage.setItem(LS_KEY, JSON.stringify(data));
+          return data;
+        }
+      }catch(e){}
+    }
+    return [];
+  }
+
+  function saveProducts(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(products)); }catch(e){}
+  }
+
+  function loadEvents(){
+    try{
+      const raw = localStorage.getItem(LS_EVENTS_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveEvents(){
+    try{ localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events.slice(-5000))); }catch(e){}
+  }
+  function logEvent(type, product){
+    try{
+      events.push({
+        type,
+        name: (product && product.name) ? String(product.name) : '',
+        lot: (product && product.lot) ? String(product.lot) : '',
+        expiryText: (product && product.expiryText) ? String(product.expiryText) : '',
+        t: Date.now(),
+        dateAdded: (product && product.dateAdded) ? String(product.dateAdded) : null
+      });
+      saveEvents();
+    }catch(e){}
+  }
+
+
+  function normalizeProducts(list){
+    const out = [];
+    for (const p of (Array.isArray(list)?list:[])){
+      out.push({
+        id: p.id || uid(),
+        name: (p.name || '').toString(),
+        lot: (p.lot || '').toString(),
+        dateAdded: p.dateAdded || new Date().toISOString(),
+        expiryText: (p.expiryText ?? p.expiry ?? '').toString(),
+        status: (p.status || (Number.isInteger(p.row) && Number.isInteger(p.col) ? 'terra' : 'scaffale')).toString(),
+        row: Number.isInteger(p.row) ? p.row : undefined,
+        col: Number.isInteger(p.col) ? p.col : undefined,
+      });
+    }
+    // ordina una volta: recenti prima
+    out.sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    return out;
+  }
+
+  // ====== undo (snapshot)
+  function saveToUndo(){
+    try{
+      undoStack.push({ state: deepClone(products), events: deepClone(events), t: Date.now() });
+      if (undoStack.length > 10) undoStack.shift();
+      updateUndoButton();
+    }catch(e){}
+  }
+
+  function updateUndoButton(){
+    el.undoBtn.style.display = undoStack.length ? 'inline-flex' : 'none';
+  }
+
+  function undoLastAction(){
+    if (!undoStack.length) return;
+    const last = undoStack.pop();
+    if (last && last.state){
+      products = deepClone(last.state);
+      if (last.events) events = deepClone(last.events);
+      rebuildGridIndex();
+      saveProducts();
+      saveEvents();
+      scheduleRenderAll();
+      updateUndoButton();
+    }
+  }
+
+  // ====== tab
+  function switchTab(view){
+    const isLista = view === 'lista';
+    const isMappa = view === 'mappa';
+    const isStats = view === 'stats';
+    const isPrel = view === 'prelievo';
+
+    el.viewLista.style.display = isLista ? '' : 'none';
+    el.viewMappa.style.display = isMappa ? '' : 'none';
+    el.viewStats.style.display = isStats ? '' : 'none';
+    el.viewPrelievo.style.display = isPrel ? '' : 'none';
+
+    el.tabLista.classList.toggle('active', isLista);
+    el.tabMappa.classList.toggle('active', isMappa);
+    el.tabStats.classList.toggle('active', isStats);
+    el.tabPrelievo.classList.toggle('active', isPrel);
+
+    if (isMappa) scheduleRenderGrid();
+    if (isStats) renderStatsView();
+    if (isPrel) renderPrelievo();
+  }
+
+
+
+  // ====== prelievo (stato dentro products: p.status === 'prelievo')
+  function renderPrelievo(){
+    if (!el.prelievoList) return;
+    el.prelievoList.textContent = '';
+
+    const items = products.filter(p => p && p.status === 'prelievo');
+    if (!items.length){
+      if (el.prelievoEmpty) el.prelievoEmpty.style.display = '';
+      return;
+    }
+    if (el.prelievoEmpty) el.prelievoEmpty.style.display = 'none';
+
+    const frag = document.createDocumentFragment();
+    for (const p of items){
+      const node = el.tpl.content.firstElementChild.cloneNode(true);
+      node.querySelector('.abbr').textContent = p.name || '(senza descrizione)';
+      node.querySelector('[data-detail]').innerHTML = `🏷️ ${(p.lot||'—')} <span style="margin-left:8px; color:#6b7280; font-weight:700">📦 PRELIEVO</span>`;
+
+      const btns = node.querySelector('[data-btns]');
+      btns.textContent = '';
+      btns.appendChild(makeBtn('remove-grid','Rimetti a scaffale', 'back', p.id));
+      btns.appendChild(makeBtn('danger','Elimina', 'del', p.id));
+
+      frag.appendChild(node);
+    }
+    el.prelievoList.appendChild(frag);
+  }
+
+  // ====== assi numerati (mappa)
+  function renderAxis(){
+    if (!el.axisTop || !el.axisBottom || !el.axisLeft || !el.axisRight) return;
+
+    // allineamento colonne (come la griglia)
+    el.axisTop.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
+    el.axisBottom.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
+
+    el.axisTop.textContent = '';
+    el.axisBottom.textContent = '';
+    el.axisLeft.textContent = '';
+    el.axisRight.textContent = '';
+
+    const mk = (n) => {
+      const d = document.createElement('div');
+      d.className = 'axis-cell';
+      d.textContent = String(n);
+      return d;
+    };
+
+    const ft = document.createDocumentFragment();
+    const fb = document.createDocumentFragment();
+    for(let c=1;c<=cols;c++){
+      ft.appendChild(mk(c));
+      fb.appendChild(mk(c));
+    }
+    el.axisTop.appendChild(ft);
+    el.axisBottom.appendChild(fb);
+
+    const fl = document.createDocumentFragment();
+    const fr = document.createDocumentFragment();
+    for(let r=1;r<=rows;r++){
+      fl.appendChild(mk(r));
+      fr.appendChild(mk(r));
+    }
+    el.axisLeft.appendChild(fl);
+    el.axisRight.appendChild(fr);
+  }
+
+  // ====== grid index
+  const keyRC = (r,c) => r + ',' + c;
+  function rebuildGridIndex(){
+    gridMap = new Map();
+    for (const p of products){
+      if (p.status === 'prelievo') continue;
+      if (p.status === 'prelievo') continue;
+      if (p && p.status === 'prelievo') continue;
+      if (Number.isInteger(p.row) && Number.isInteger(p.col)){
+        gridMap.set(keyRC(p.row, p.col), p.id);
+      }
+    }
+  }
+  function productAt(r,c){
+    const id = gridMap.get(keyRC(r,c));
+    if (!id) return null;
+    // lookup lineare solo sul singolo id; in pratica OK. Se vuoi: mappa id->product.
+    return products.find(p => p.id === id) || null;
+  }
+  function countOccupied(){ return gridMap.size; }
+
+  // ====== form
+  function clearForm(){ el.name.value=''; el.lot.value=''; el.expiry.value=''; }
+  function saveFromForm(){
+    const name = el.name.value.trim();
+    const lot = el.lot.value.trim();
+    const expiryText = (el.expiry.value || '').trim();
+    if (!name && !lot && !expiryText) return;
+
+    saveToUndo();
+
+    const newProd = { id: uid(), name, lot, expiryText, dateAdded: new Date().toISOString(), status: 'scaffale' };
+    // mettiamo in testa: così niente sort ad ogni render
+    products.unshift(newProd);
+        logEvent('add', newProd);
+    logEvent('add', newProd);
+
+    saveProducts();
+    saveEvents();
+    clearForm();
+    scheduleRenderAll();
+  }
+
+  // ====== choose column (dialog) - listener unico
+  let chooseResolve = null;
+  function chooseColumn(){
+    return new Promise((resolve) => {
+      chooseResolve = resolve;
+
+      el.colSelect.textContent = '';
+      for(let c=0;c<cols;c++){
+        const opt = document.createElement('option');
+        opt.value = String(c);
+        opt.textContent = 'Colonna ' + (c+1);
+        el.colSelect.appendChild(opt);
+      }
+      try { el.colDialog.showModal(); } catch(e){ el.colDialog.setAttribute('open',''); }
+    });
+  }
+  el.colCancel.addEventListener('click', () => {
+    try{ el.colDialog.close(); }catch(e){}
+    if (chooseResolve){ chooseResolve(null); chooseResolve = null; }
+  });
+  el.colOk.addEventListener('click', () => {
+    const v = parseInt(el.colSelect.value, 10);
+    try{ el.colDialog.close(); }catch(e){}
+    if (chooseResolve){ chooseResolve(Number.isFinite(v)?v:null); chooseResolve = null; }
+  });
+
+  function findFirstEmptyInColumn(c){
+    for(let r=0;r<rows;r++){
+      if (!gridMap.has(keyRC(r,c))) return { r };
+    }
+    return null;
+  }
+
+  function compactColumn(c){
+    // compatta gli elementi di una colonna verso l'alto
+    const colItems = products
+      .filter(p => Number.isInteger(p.col) && p.col === c && Number.isInteger(p.row))
+      .sort((a,b) => a.row - b.row);
+
+    for (let i=0; i<colItems.length; i++){
+      colItems[i].row = i;
+      colItems[i].col = c;
+    }
+    rebuildGridIndex();
+    saveProducts();
+  }
+
+  // ====== render (con rAF per evitare sfarfallii)
+  let listQueued = false;
+  let gridQueued = false;
+
+  function scheduleRenderList(){
+    if (listQueued) return;
+    listQueued = true;
+    requestAnimationFrame(() => {
+      listQueued = false;
+      renderList();
+    });
+  }
+
+  function scheduleRenderGrid(){
+    if (gridQueued) return;
+    gridQueued = true;
+    requestAnimationFrame(() => {
+      gridQueued = false;
+      renderGrid();
+    });
+  }
+
+  function scheduleRenderAll(){
+    scheduleRenderList();
+    if (el.viewMappa.style.display !== 'none') scheduleRenderGrid();
+    if (el.viewStats.style.display !== 'none') renderStatsView();
+    renderPrelievo(); // render sempre, evita lista vuota
+  }
+
+  function renderList(){
+    const q = (el.search.value || '').trim().toLowerCase();
+    const listUnplaced = [];
+    const listPlaced = [];
+
+    // products è già in ordine "recenti prima" e NON la risortiamo qui
+    for (const p of products){
+      if (p.status === 'prelievo') continue;
+      if (q){
+        const n = (p.name || '').toLowerCase();
+        const l = (p.lot || '').toLowerCase();
+        if (!n.includes(q) && !l.includes(q)) continue;
+      }
+      if (Number.isInteger(p.row) && Number.isInteger(p.col)) listPlaced.push(p);
+      else listUnplaced.push(p);
+    }
+
+    // clear
+    el.listUnplaced.textContent = '';
+    el.listPlaced.textContent = '';
+
+    const emptyUnplaced = () => {
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '20px';
+      d.style.textAlign = 'center';
+      d.style.fontStyle = 'italic';
+      d.textContent = 'Nessun prodotto in attesa di posizionamento.';
+      el.listUnplaced.appendChild(d);
+    };
+    const emptyPlaced = () => {
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '20px';
+      d.style.textAlign = 'center';
+      d.style.fontStyle = 'italic';
+      d.textContent = 'Il magazzino è vuoto.';
+      el.listPlaced.appendChild(d);
+    };
+
+    if (!listUnplaced.length) emptyUnplaced();
+    else el.listUnplaced.appendChild(buildListFragment(listUnplaced, false));
+
+    if (!listPlaced.length) emptyPlaced();
+    else el.listPlaced.appendChild(buildListFragment(listPlaced, true));
+  }
+    if (el.viewStats.style.display !== 'none') renderStatsView();
+
+  function buildListFragment(arr, isPlaced){
+    const frag = document.createDocumentFragment();
+    for (const p of arr){
+      frag.appendChild(buildListItem(p, isPlaced));
+    }
+    return frag;
+  }
+
+  function buildListItem(p, isPlaced){
+    const node = el.tpl.content.firstElementChild.cloneNode(true);
+
+    const title = node.querySelector('.abbr');
+    const detail = node.querySelector('[data-detail]');
+    const btns = node.querySelector('[data-btns]');
+
+    title.textContent = p.name || '(senza descrizione)';
+
+    let detailText = '🏷️ ' + (p.lot || '—');
+    if (isPlaced) detailText += `  📍 R${p.row+1} C${p.col+1}`;
+    detail.innerHTML = isPlaced
+      ? `🏷️ ${(p.lot||'—')} <span style="margin-left:8px; color:#667eea; font-weight:700">📍 R${p.row+1} C${p.col+1}</span>`
+      : detailText;
+
+    const meta = document.createElement('div');
+    meta.className = 'smallmeta';
+    meta.textContent = 'Inserito: ' + new Date(p.dateAdded).toLocaleDateString('it-IT');
+    node.querySelector('div[style="min-width:0"]').appendChild(meta);
+
+    const tagsWrap = document.createElement('div');
+    tagsWrap.className = 'tagline';
+
+    const exp = getExpiryStatus(p.expiryText);
+    if (p.expiryText && exp){
+      const t = document.createElement('div');
+      t.className = 'tag ' + exp.cls;
+      t.textContent = exp.label;
+      tagsWrap.appendChild(t);
+    } else if (p.expiryText){
+      const t = document.createElement('div');
+      t.className = 'tag yellow';
+      t.textContent = '🟡 Scad: ' + p.expiryText;
+      tagsWrap.appendChild(t);
+    }
+
+    const gDays = (daysSinceProduction(p) ?? daysSinceISO(p.dateAdded));
+    const g = giacenzaStatus(gDays);
+    if (g){
+      const t2 = document.createElement('div');
+      t2.className = 'tag ' + g.cls;
+      t2.textContent = g.label;
+      tagsWrap.appendChild(t2);
+    }
+
+    if (tagsWrap.childNodes.length){
+      node.querySelector('div[style="min-width:0"]').appendChild(tagsWrap);
+    }
+
+
+    // Pulsanti (dataset per delegation)
+    if (isPlaced){
+      btns.appendChild(makeBtn('secondary','Modifica', 'edit', p.id));
+      btns.appendChild(makeBtn('secondary','Metti in Prelievo', 'prel', p.id));
+      btns.appendChild(makeBtn('remove-grid','Metti a scaffale', 'unplace', p.id));
+      btns.appendChild(makeBtn('go-to-map','Mappa', 'map', p.id));
+      btns.appendChild(makeBtn('danger','Elimina', 'del', p.id));
+    } else {
+      btns.appendChild(makeBtn('secondary','Modifica', 'edit', p.id));
+      btns.appendChild(makeBtn('secondary','Metti in Prelievo', 'prel', p.id));
+      btns.appendChild(makeBtn('add-grid','Posiziona a terra', 'place', p.id));
+      btns.appendChild(makeBtn('danger','Elimina', 'del', p.id));
+    }
+    return node;
+  }
+
+  function makeBtn(cls, text, action, id){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = text;
+    b.dataset.action = action;
+    b.dataset.id = id;
+    return b;
+  }
+
+  // delegation: un solo listener per le liste
+  function handleListClick(e){
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+    if (!action || !id) return;
+
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+
+    if (action === 'map'){
+      switchTab('mappa');
+      return;
+    }
+
+    if (action === 'edit'){
+      openEditDialog(id);
+      return;
+    }
+    if (action === 'prel'){
+      const name = (p.name || '').trim();
+      if (!name) return;
+
+      // In Prelievo può esserci solo 1 prodotto per tipo (stesso nome)
+      const exists = products.some(x => x && x.status === 'prelievo' && (x.name||'').trim() === name);
+      if (exists){
+        showNotification('Info','Prodotto già in Prelievo',true);
+        return;
+      }
+
+      saveToUndo();
+      p.status = 'prelievo';
+      delete p.row; delete p.col;
+      rebuildGridIndex();
+      saveProducts();
+      scheduleRenderAll();
+      return;
+    }
+
+    if (action === 'back'){
+      saveToUndo();
+      p.status = 'scaffale';
+      rebuildGridIndex();
+      saveProducts();
+      scheduleRenderAll();
+      return;
+    }
+
+
+    if (action === 'del'){
+      showNotification('Conferma', 'Eliminare questo prodotto?', true, () => {
+        saveToUndo();
+        const oldCol = p.col;
+        logEvent('remove', p);
+        products = products.filter(x => x.id !== id);
+        rebuildGridIndex();
+        saveProducts();
+        if (Number.isInteger(oldCol)) compactColumn(oldCol);
+        scheduleRenderAll();
+      });
+      return;
+    }
+
+    if (action === 'unplace'){
+      saveToUndo();
+      const oldCol = p.col;
+      delete p.row; delete p.col;
+      p.status = 'scaffale';
+      rebuildGridIndex();
+      saveProducts();
+      if (Number.isInteger(oldCol)) compactColumn(oldCol);
+      scheduleRenderAll();
+      return;
+    }
+
+    if (action === 'place'){
+      chooseColumn().then((col) => {
+        if (col == null) return;
+        const spot = findFirstEmptyInColumn(col);
+        if (!spot){
+          showNotification('Colonna Piena', "Scegli un'altra colonna.", false);
+          return;
+        }
+        saveToUndo();
+        p.row = spot.r; p.col = col;
+        p.status = 'terra';
+        rebuildGridIndex();
+        saveProducts();
+        scheduleRenderAll();
+      });
+      return;
+    }
+  }
+  el.listUnplaced.addEventListener('click', handleListClick);
+  el.listPlaced.addEventListener('click', handleListClick);
+
+  // ====== griglia (render + delegation)
+  function renderGrid(){
+    el.grid.textContent = '';
+    el.grid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
+    el.occupiedBadge.textContent = 'Occupate: ' + countOccupied();
+
+    const frag = document.createDocumentFragment();
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const p = productAt(r,c);
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (p ? ' occ' : '');
+        cell.dataset.r = String(r);
+        cell.dataset.c = String(c);
+
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = p ? (p.name || '') : '';
+
+        const lot = document.createElement('div');
+        lot.className = 'lot';
+        if (p){
+          const exp = getExpiryStatus(p.expiryText);
+          let mark = '';
+          if (exp){
+            if (exp.cls === 'skull') mark = ' ☠️';
+            else if (exp.cls === 'red') mark = ' 🔴';
+            else if (exp.cls === 'yellow') mark = ' 🟡';
+            else if (exp.cls === 'green') mark = ' 🟢';
+          }
+          lot.textContent = (p.lot || '') + mark;
+        } else {
+          lot.textContent = '';
+        }
+
+        cell.appendChild(name);
+        cell.appendChild(lot);
+        frag.appendChild(cell);
+      }
+    }
+    el.grid.appendChild(frag);
+  }
+
+  // click delegation sulla griglia
+  el.grid.addEventListener('click', (e) => {
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    const r = parseInt(cell.dataset.r, 10);
+    const c = parseInt(cell.dataset.c, 10);
+    if (!Number.isFinite(r) || !Number.isFinite(c)) return;
+    const p = productAt(r,c);
+    openCellEditor(r,c,p);
+  });
+
+  function openCellEditor(r,c,p){
+    el.cellTitle.textContent = `Cella R${r+1} C${c+1}`;
+    el.dName.value = p ? (p.name || '') : '';
+    el.dLot.value  = p ? (p.lot  || '') : '';
+    el.dExpiry.value = p ? (p.expiryText || '') : '';
+
+    const buttonContainer = el.cellDialog.querySelector('.row');
+    buttonContainer.textContent = '';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'alt';
+    saveBtn.textContent = 'Salva';
+    saveBtn.addEventListener('click', () => {
+      const name = el.dName.value.trim();
+      const lot  = el.dLot.value.trim();
+      const expiryText = (el.dExpiry.value || '').trim();
+      if (!name && !lot && !expiryText){
+        showNotification('Attenzione', 'Inserisci dati', false);
+        return;
+      }
+
+      saveToUndo();
+
+      if (p){
+        p.name = name;
+        p.lot  = lot;
+        p.expiryText = expiryText;
+        logEvent('edit', p);
+      } else {
+        const newProd = { id: uid(), name, lot, expiryText, dateAdded: new Date().toISOString(), row: r, col: c, status: 'terra' };
+        products.unshift(newProd);
+        logEvent('add', newProd);
+      }
+
+      rebuildGridIndex();
+      saveProducts();
+      scheduleRenderAll();
+      closeCellDialogSafely();
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'ghost';
+    cancelBtn.textContent = 'Annulla';
+    cancelBtn.addEventListener('click', () => {
+      try{ el.cellDialog.close(); }catch(e){}
+    });
+
+    buttonContainer.appendChild(saveBtn);
+
+    if (p){
+      const freeBtn = document.createElement('button');
+      freeBtn.type = 'button';
+      freeBtn.className = 'remove-grid';
+      freeBtn.textContent = 'Metti a scaffale';
+      freeBtn.addEventListener('click', () => {
+        saveToUndo();
+        const oldCol = p.col;
+        delete p.row; delete p.col;
+        rebuildGridIndex();
+        saveProducts();
+        if (Number.isInteger(oldCol)) compactColumn(oldCol);
+        scheduleRenderAll();
+        try{ el.cellDialog.close(); }catch(e){}
+      });
+
+      const moveBtn = document.createElement('button');
+      moveBtn.type = 'button';
+      moveBtn.className = 'secondary';
+      moveBtn.textContent = 'Sposta in colonna';
+      moveBtn.addEventListener('click', () => {
+        chooseColumn().then((col) => {
+          if (col == null) return;
+          const spot = findFirstEmptyInColumn(col);
+          if (!spot){
+            showNotification('Colonna Piena', 'Piena', false);
+            return;
+          }
+          saveToUndo();
+          const oldCol = p.col;
+          p.row = spot.r;
+          p.col = col;
+          rebuildGridIndex();
+          saveProducts();
+          if (Number.isInteger(oldCol)) compactColumn(oldCol);
+          scheduleRenderAll();
+          try{ el.cellDialog.close(); }catch(e){}
+        });
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'danger';
+      deleteBtn.textContent = 'Elimina';
+      deleteBtn.addEventListener('click', () => {
+        closeCellDialogSafely();
+        setTimeout(() => {
+          showNotification('Conferma', 'Eliminare questo prodotto?', true, () => {
+            saveToUndo();
+            const oldCol = p.col;
+            logEvent('remove', p);
+            products = products.filter(x => x.id !== p.id);
+            rebuildGridIndex();
+            saveProducts();
+            if (Number.isInteger(oldCol)) compactColumn(oldCol);
+            scheduleRenderAll();
+          });
+        }, 0);
+      });
+
+      buttonContainer.appendChild(freeBtn);
+      buttonContainer.appendChild(moveBtn);
+      buttonContainer.appendChild(deleteBtn);
+    }
+
+    buttonContainer.appendChild(cancelBtn);
+    try { el.cellDialog.showModal(); } catch(e){ el.cellDialog.setAttribute('open',''); }
+  }
+
+  // ====== export/import
+  el.exportJsonBtn.addEventListener('click', () => {
+    const dataStr = JSON.stringify(products, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `magazzino-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  });
+
+  el.importJsonFile.addEventListener('change', (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    showNotification("Importazione", "Sovrascrivere dati attuali?", true, () => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try{
+          const imported = JSON.parse(String(e.target.result || ''));
+          if (Array.isArray(imported)){
+            saveToUndo();
+            products = normalizeProducts(imported);
+            rebuildGridIndex();
+            saveProducts();
+            scheduleRenderAll();
+            showNotification("Fatto", "Dati importati.", false);
+          } else {
+            showNotification("Errore", "Formato file non valido.", false);
+          }
+        }catch(err){
+          showNotification("Errore", "File JSON non valido.", false);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    event.target.value = '';
+  });
+
+  // ====== PDF export (lazy)
+  el.exportPdfBtn.addEventListener('click', async () => {
+    try{
+      const JsPDF = await loadJsPDF();
+      const doc = new JsPDF();
+
+      const xProd = 14;
+      const xLot = 100;
+      const xPos = 160;
+      let y = 20;
+
+      doc.setFontSize(18);
+      doc.text("IO Sano - Report Magazzino", 14, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.text("Data: " + new Date().toLocaleDateString('it-IT'), 14, y);
+      y += 15;
+
+      const drawHeaders = (myY) => {
+        doc.setFont("helvetica", "bold");
+        doc.text("Prodotto", xProd, myY);
+        doc.text("Lotto", xLot, myY);
+        doc.text("Posizione", xPos, myY);
+        doc.line(14, myY + 2, 196, myY + 2);
+        doc.setFont("helvetica", "normal");
+      };
+
+      drawHeaders(y);
+      y += 10;
+
+      // manteniamo l'ordine “posizionati prima” come prima, ma senza ricalcoli pesanti
+      const placed = products.filter(p => Number.isInteger(p.row) && Number.isInteger(p.col));
+      const unplaced = products.filter(p => !(Number.isInteger(p.row) && Number.isInteger(p.col)));
+      const allItems = placed.concat(unplaced);
+
+      for (const p of allItems){
+        if (y > 280){
+          doc.addPage();
+          y = 20;
+          drawHeaders(y);
+          y += 10;
+        }
+        let posText = "Scaffale";
+        if (Number.isInteger(p.row) && Number.isInteger(p.col)) posText = `C${p.col+1} - R${p.row+1}`;
+
+        let name = p.name || "";
+        if (name.length > 40) name = name.substring(0, 37) + "...";
+
+        doc.text(name, xProd, y);
+        doc.text(p.lot || "-", xLot, y);
+        doc.text(posText, xPos, y);
+        y += 8;
+      }
+
+      doc.save("report_iosano.pdf");
+    }catch(err){
+      showNotification("PDF non disponibile", "Non riesco a caricare la libreria PDF. Apri l'app online almeno una volta e riprova.", false);
+    }
+  });
+
+  // ====== ricerca (debounce) + reset
+  el.search.addEventListener('input', debounce(() => scheduleRenderList(), 140));
+  el.resetSearchBtn.addEventListener('click', () => {
+    el.search.value = '';
+    scheduleRenderList();
+  });
+
+  // ====== tabs + undo + form
+  el.tabLista.addEventListener('click', () => switchTab('lista'));
+  el.tabMappa.addEventListener('click', () => switchTab('mappa'));
+  el.tabStats.addEventListener('click', () => switchTab('stats'));
+  el.tabPrelievo.addEventListener('click', () => switchTab('prelievo'));
+  el.undoBtn.addEventListener('click', undoLastAction);
+  el.clearBtn.addEventListener('click', clearForm);
+  el.saveBtn.addEventListener('click', saveFromForm);
+
+  // ====== PWA install
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    el.installBar.style.display = 'flex';
+  });
+  el.installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    el.installBar.style.display = 'none';
+  });
+
+  // ====== init
+
+  // ====== Edit dialog (lista)
+  let editTargetId = null;
+
+  function openEditDialog(id){
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    editTargetId = id;
+    el.eName.value = p.name || '';
+    el.eLot.value = p.lot || '';
+    el.eExpiry.value = p.expiryText || '';
+    try { el.editDialog.showModal(); } catch(e){ el.editDialog.setAttribute('open',''); }
+  }
+
+  el.eCancel.addEventListener('click', () => {
+    try{ el.editDialog.close(); }catch(e){}
+    editTargetId = null;
+  });
+
+  el.eSave.addEventListener('click', () => {
+    if (!editTargetId) { try{ el.editDialog.close(); }catch(e){}; return; }
+    const p = products.find(x => x.id === editTargetId);
+    if (!p) { try{ el.editDialog.close(); }catch(e){}; editTargetId = null; return; }
+
+    const name = (el.eName.value || '').trim();
+    const lot  = (el.eLot.value || '').trim();
+    const expiryText = (el.eExpiry.value || '').trim();
+    if (!name && !lot && !expiryText){
+      showNotification('Attenzione', 'Inserisci almeno un dato', false);
+      return;
+    }
+
+    saveToUndo();
+    p.name = name;
+    p.lot = lot;
+    p.expiryText = expiryText;
+    logEvent('edit', p);
+
+    saveProducts();
+    saveEvents();
+    rebuildGridIndex();
+    scheduleRenderAll();
+
+    try{ el.editDialog.close(); }catch(e){}
+    editTargetId = null;
+  });
+
+  // ====== Statistiche
+  function topN(obj, n=10){
+    return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);
+  }
+
+  function renderTop(container, pairs){
+    container.textContent = '';
+    if (!pairs.length){
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '12px 4px';
+      d.style.fontStyle = 'italic';
+      d.textContent = '—';
+      container.appendChild(d);
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    for(const [name,count] of pairs){
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.style.marginBottom = '10px';
+      div.innerHTML = `<div class="abbr">${name}</div>
+                       <div class="muted">Occorrenze: <strong>${count}</strong></div>`;
+      frag.appendChild(div);
+    }
+    container.appendChild(frag);
+  }
+
+  function renderStatsList(container, items){
+    container.textContent = '';
+    if (!items.length){
+      const d = document.createElement('div');
+      d.className = 'muted';
+      d.style.padding = '12px 4px';
+      d.style.fontStyle = 'italic';
+      d.textContent = '—';
+      container.appendChild(d);
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    for(const p of items){
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.style.marginBottom = '10px';
+      div.innerHTML = `<div class="abbr">${p.name || '(senza descrizione)'}</div>
+                       <div class="muted">🏷️ ${(p.lot||'—')} • Inserito: ${new Date(p.dateAdded).toLocaleDateString('it-IT')}</div>`;
+      frag.appendChild(div);
+    }
+    container.appendChild(frag);
+  }
+
+  function renderStatsView(){
+    if (!el.statsSummary) return;
+
+    let skull=0, red=0, yellow=0, green=0;
+    const listSkull=[], listRed=[], listYellow=[], listGreen=[];
+
+    for(const p of products){
+      if (!p.expiryText) continue;
+      const st = getExpiryStatus(p.expiryText);
+      if (!st) continue;
+
+      if (st.cls === 'skull'){ skull++; listSkull.push(p); }
+      else if (st.cls === 'red'){ red++; listRed.push(p); }
+      else if (st.cls === 'yellow'){ yellow++; listYellow.push(p); }
+      else if (st.cls === 'green'){ green++; listGreen.push(p); }
+    }
+
+    const byUrgency = (a,b) => expiryStatus(a.expiryText).days - expiryStatus(b.expiryText).days;
+    listSkull.sort(byUrgency);
+    listRed.sort(byUrgency);
+    listYellow.sort(byUrgency);
+    listGreen.sort(byUrgency);
+
+    const addedCounts = {};
+    const removedCounts = {};
+    let dwellSum=0, dwellN=0;
+
+    for(const e of events){
+      if (!e || !e.type) continue;
+      const n = (e.name || '(senza nome)').trim() || '(senza nome)';
+      if (e.type === 'add') addedCounts[n] = (addedCounts[n]||0) + 1;
+      if (e.type === 'remove'){
+        removedCounts[n] = (removedCounts[n]||0) + 1;
+        if (e.dateAdded){
+          const prodDate = parseLottoToDate(e.lot, e.expiryText);
+          const da = prodDate ? prodDate.getTime() : new Date(e.dateAdded).getTime();
+          if (Number.isFinite(da)){
+            const days = Math.max(0, Math.ceil((e.t - da)/86400000));
+            dwellSum += days;
+            dwellN += 1;
+          }
+        }
+      }
+    }
+
+    el.statsSummary.textContent =
+      `Totale prodotti: ${products.length} • Con scadenza: ${skull+red+yellow+green} • ☠️ ${skull} • 🔴 ${red} • 🟡 ${yellow} • 🟢 ${green}`;
+
+    renderTop(el.statsTopAdded, topN(addedCounts, 10));
+    renderTop(el.statsTopRemoved, topN(removedCounts, 10));
+
+    el.statsAvgDwell.textContent = dwellN
+      ? `Tempo medio di giacenza (da lotto, fallback inserimento): ${Math.round(dwellSum/dwellN)} giorni`
+      : `Tempo medio di giacenza (da lotto, fallback inserimento): —`;
+
+    renderStatsList(el.statsListSkull, listSkull.slice(0,25));
+    renderStatsList(el.statsListRed, listRed.slice(0,25));
+    renderStatsList(el.statsListYellow, listYellow.slice(0,25));
+    renderStatsList(el.statsListGreen, listGreen.slice(0,25));
+  }
+
+function init(){
+    products = normalizeProducts(loadProducts());
+    events = loadEvents();
+    rebuildGridIndex();
+    updateUndoButton();
+    renderList();
+    renderAxis();
+    renderGrid();
+  }
+
+  // Service Worker (immutato, ma senza log invasivi)
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
