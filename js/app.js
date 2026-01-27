@@ -86,18 +86,25 @@ function compactColumn(col){
 }
 
 function exportJson(){
-  const dataStr = JSON.stringify(S.products, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`magazzino-${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  try{
+    const dataStr = JSON.stringify(S.products, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'magazzino-iosano.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e){
+    showNotification('Errore','Esportazione non riuscita',false);
+  }
 }
 
 function initImport(){
   el.importJsonFile.addEventListener('change', (event)=>{
-    const file = event.target.files && event.target.files[0];
+    const file = (event.target.files && event.target.files.length) ? event.target.files[0] : null;
     if (!file) return;
     showNotification('Importazione','Sovrascrivere dati attuali?',true,()=>{
       const reader = new FileReader();
