@@ -108,18 +108,32 @@ function initImport(){
     if (!file) return;
     showNotification('Importazione','Sovrascrivere dati attuali?',true,()=>{
       const reader = new FileReader();
-      reader.onload = (e)=>{
+      reader.onload = (e) => {
         try{
-          const imported = JSON.parse(String(e.target.result||''));
-          if (Array.isArray(imported)){
+          let txt = String(e.target.result || '');
+          // rimuovi BOM + spazi strani
+          txt = txt.replace(/^\uFEFF/, '').trim();
+          const parsed = JSON.parse(txt);
+
+          // accetta vari formati: array diretto, oppure {products:[...]}
+          let arr = null;
+          if (Array.isArray(parsed)) arr = parsed;
+          else if (parsed && Array.isArray(parsed.products)) arr = parsed.products;
+          else if (parsed && Array.isArray(parsed.items)) arr = parsed.items;
+
+          if (arr){
             S.saveToUndo();
-            S.products = S.normalizeProducts(imported);
+            S.products = S.normalizeProducts(arr);
             S.rebuildGridIndex();
             S.saveProducts();
             scheduleRenderAll();
             showNotification('Fatto','Dati importati.',false);
-          } else showNotification('Errore','Formato file non valido.',false);
-        }catch(err){ showNotification('Errore','File JSON non valido.',false); }
+          } else {
+            showNotification('Errore','Formato JSON valido ma struttura non riconosciuta (serve un elenco prodotti).',false);
+          }
+        }catch(err){
+          showNotification('Errore','File JSON non valido.',false);
+        }
       };
       reader.readAsText(file);
     });
