@@ -2,22 +2,10 @@
 'use strict';
 
 import { el, showNotification, closeCellDialogSafely } from './ui.js';
-import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveProducts, saveToUndo, uid } from './state.js';
+import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveProducts, saveToUndo } from './state.js';
 import { getExpiryStatus } from './utils.js';
 
 let chooseResolve = null;
-
-export function initColumnDialog(){
-  el.colCancel.addEventListener('click', () => {
-    try{ el.colDialog.close(); }catch(e){}
-    if (chooseResolve){ chooseResolve(null); chooseResolve = null; }
-  });
-  el.colOk.addEventListener('click', () => {
-    const v = parseInt(el.colSelect.value, 10);
-    try{ el.colDialog.close(); }catch(e){}
-    if (chooseResolve){ chooseResolve(Number.isFinite(v)?v:null); chooseResolve = null; }
-  });
-}
 
 export function chooseColumn(){
   return new Promise((resolve) => {
@@ -33,17 +21,25 @@ export function chooseColumn(){
   });
 }
 
+export function initColumnDialog(){
+  el.colCancel.addEventListener('click', () => {
+    try{ el.colDialog.close(); }catch(e){}
+    if (chooseResolve){ chooseResolve(null); chooseResolve = null; }
+  });
+  el.colOk.addEventListener('click', () => {
+    const v = parseInt(el.colSelect.value, 10);
+    try{ el.colDialog.close(); }catch(e){}
+    if (chooseResolve){ chooseResolve(Number.isFinite(v)?v:null); chooseResolve = null; }
+  });
+}
+
 export function renderAxis(){
   el.axisTop.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
   el.axisBottom.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
   el.axisTop.textContent=''; el.axisBottom.textContent=''; el.axisLeft.textContent=''; el.axisRight.textContent='';
   const mk=(n)=>{ const d=document.createElement('div'); d.className='axis-cell'; d.textContent=String(n); return d; };
-  const ft=document.createDocumentFragment(), fb=document.createDocumentFragment();
-  for(let c=1;c<=cols;c++){ ft.appendChild(mk(c)); fb.appendChild(mk(c)); }
-  el.axisTop.appendChild(ft); el.axisBottom.appendChild(fb);
-  const fl=document.createDocumentFragment(), fr=document.createDocumentFragment();
-  for(let r=1;r<=rows;r++){ fl.appendChild(mk(r)); fr.appendChild(mk(r)); }
-  el.axisLeft.appendChild(fl); el.axisRight.appendChild(fr);
+  for(let c=1;c<=cols;c++){ el.axisTop.appendChild(mk(c)); el.axisBottom.appendChild(mk(c)); }
+  for(let r=1;r<=rows;r++){ el.axisLeft.appendChild(mk(r)); el.axisRight.appendChild(mk(r)); }
 }
 
 export function renderGrid(){
@@ -51,18 +47,17 @@ export function renderGrid(){
   el.grid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-w))`;
   el.occupiedBadge.textContent = 'Occupate: ' + countOccupied();
 
-  const frag = document.createDocumentFragment();
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
       const p = productAt(r,c);
       const cell = document.createElement('div');
       cell.className = 'cell' + (p ? ' occ' : '');
-      cell.dataset.r = String(r);
-      cell.dataset.c = String(c);
+      cell.dataset.r = r;
+      cell.dataset.c = c;
 
       const name = document.createElement('div');
       name.className = 'name';
-      name.textContent = p ? (p.name || '') : '';
+      name.textContent = p ? p.name : '';
 
       const lot = document.createElement('div');
       lot.className = 'lot';
@@ -70,73 +65,100 @@ export function renderGrid(){
         const exp = getExpiryStatus(p.expiryText);
         let mark = '';
         if (exp){
-          if (exp.cls === 'skull') mark = ' ☠️';
-          else if (exp.cls === 'red') mark = ' 🔴';
-          else if (exp.cls === 'yellow') mark = ' 🟡';
-          else if (exp.cls === 'green') mark = ' 🟢';
+          if (exp.cls==='skull') mark='☠️';
+          else if (exp.cls==='red') mark='🔴';
+          else if (exp.cls==='yellow') mark='🟡';
+          else if (exp.cls==='green') mark='🟢';
         }
-        lot.textContent = (p.lot || '') + mark;
+        lot.textContent = (p.lot||'') + ' ' + mark;
       }
+
       cell.appendChild(name);
       cell.appendChild(lot);
-      frag.appendChild(cell);
+      el.grid.appendChild(cell);
     }
   }
-  el.grid.appendChild(frag);
 }
 
 export function initGridInteraction(scheduleRenderAll){
   el.grid.addEventListener('click', (e) => {
     const cell = e.target.closest('.cell');
     if (!cell) return;
-    const r = parseInt(cell.dataset.r, 10);
-    const c = parseInt(cell.dataset.c, 10);
+    const r = parseInt(cell.dataset.r,10);
+    const c = parseInt(cell.dataset.c,10);
     const p = productAt(r,c);
-    openCellEditor(r,c,p, scheduleRenderAll);
+    openCellDialog(r,c,p,scheduleRenderAll);
   });
 }
 
-function openCellEditor(r,c,p, scheduleRenderAll){
+function openCellDialog(r,c,p,scheduleRenderAll){
   el.cellTitle.textContent = `Cella R${r+1} C${c+1}`;
-  el.dName.value = p ? (p.name || '') : '';
-  el.dLot.value  = p ? (p.lot  || '') : '';
-  el.dExpiry.value = p ? (p.expiryText || '') : '';
+  el.dName.value = p ? p.name : '';
+  el.dLot.value = p ? p.lot : '';
+  el.dExpiry.value = p ? p.expiryText : '';
 
-  const buttonContainer = el.cellDialog.querySelector('.row');
-  buttonContainer.textContent = '';
+  const btnRow = el.cellDialog.querySelector('.row');
+  btnRow.textContent = '';
 
-  const saveBtn = document.createElement('button');
-  saveBtn.type = 'button';
-  saveBtn.className = 'alt';
-  saveBtn.textContent = 'Salva';
-  saveBtn.addEventListener('click', () => {
-    const name = el.dName.value.trim();
-    const lot  = el.dLot.value.trim();
-    const expiryText = (el.dExpiry.value || '').trim();
-    if (!name && !lot && !expiryText){ showNotification('Attenzione','Inserisci dati',false); return; }
+  const saveBtn = mkBtn('Salva','alt',()=>{
+    if (!p) return;
     saveToUndo();
-
-    if (p){
-      if (p.inPrelievo){ showNotification('Info','Prodotto in prelievo',false); return; }
-      p.name=name; p.lot=lot; p.expiryText=expiryText;
-    } else {
-      const newProd = { id: uid(), name, lot, expiryText, dateAdded: new Date().toISOString(), row:r, col:c, inPrelievo:false };
-      products.unshift(newProd);
-    }
-    rebuildGridIndex();
-    saveProducts();
-    scheduleRenderAll();
+    p.name = el.dName.value.trim();
+    p.lot = el.dLot.value.trim();
+    p.expiryText = el.dExpiry.value.trim();
+    rebuildGridIndex(); saveProducts(); scheduleRenderAll();
     closeCellDialogSafely();
   });
+  btnRow.appendChild(saveBtn);
 
-  const cancelBtn = document.createElement('button');
-  cancelBtn.type = 'button';
-  cancelBtn.className = 'ghost';
-  cancelBtn.textContent = 'Annulla';
-  cancelBtn.addEventListener('click', () => { try{ el.cellDialog.close(); }catch(e){} });
+  if (p){
+    btnRow.appendChild(mkBtn('Metti a scaffale','remove-grid',()=>{
+      saveToUndo();
+      delete p.row; delete p.col;
+      rebuildGridIndex(); saveProducts(); scheduleRenderAll();
+      closeCellDialogSafely();
+    }));
 
-  buttonContainer.appendChild(saveBtn);
+    btnRow.appendChild(mkBtn('Sposta in colonna','secondary',()=>{
+      chooseColumn().then(col=>{
+        if(col==null) return;
+        saveToUndo();
+        p.col = col; p.row = 0;
+        rebuildGridIndex(); saveProducts(); scheduleRenderAll();
+        closeCellDialogSafely();
+      });
+    }));
 
-  buttonContainer.appendChild(cancelBtn);
-  try { el.cellDialog.showModal(); } catch(e){ el.cellDialog.setAttribute('open',''); }
+    btnRow.appendChild(mkBtn('Metti in prelievo','secondary',()=>{
+      saveToUndo();
+      p._prevRow = p.row; p._prevCol = p.col;
+      delete p.row; delete p.col;
+      p.inPrelievo = true;
+      rebuildGridIndex(); saveProducts(); scheduleRenderAll();
+      closeCellDialogSafely();
+    }));
+
+    btnRow.appendChild(mkBtn('Elimina','danger',()=>{
+      showNotification('Conferma','Eliminare prodotto?',true,()=>{
+        saveToUndo();
+        const idx = products.findIndex(x=>x.id===p.id);
+        if(idx>=0) products.splice(idx,1);
+        rebuildGridIndex(); saveProducts(); scheduleRenderAll();
+      });
+      closeCellDialogSafely();
+    }));
+  }
+
+  btnRow.appendChild(mkBtn('Annulla','ghost',()=>closeCellDialogSafely()));
+
+  try{ el.cellDialog.showModal(); }catch(e){ el.cellDialog.setAttribute('open',''); }
+}
+
+function mkBtn(label,cls,fn){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className=cls;
+  b.textContent=label;
+  b.onclick=fn;
+  return b;
 }
