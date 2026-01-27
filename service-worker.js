@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iosano-v1769506352';
+const CACHE_NAME = 'iosano-v1769530388';
 
 const ASSETS = [
   './',
@@ -40,10 +40,10 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     const cached = await caches.match(event.request);
     if (cached) return cached;
-    try{
+    try {
       return await fetch(event.request);
-    }catch(e){
-      if (event.request.mode === 'navigate'){
+    } catch(e) {
+      if (event.request.mode === 'navigate') {
         const fallback = await caches.match('./index.html');
         if (fallback) return fallback;
       }
