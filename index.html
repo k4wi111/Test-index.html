@@ -629,7 +629,7 @@
         <button id="exportJsonBtn" class="action-btn" type="button" style="background: #4b5563;">JSON</button>
         <button class="action-btn import" type="button">
           Importa
-          <input id="importJsonFile" type="file" accept="application/json"/>
+          <input id="importJsonFile" type="file" accept="application/json">
         </button>
       </div>
     </div>
@@ -794,5 +794,10 @@
 </div>
 
 <script type="module" src="./js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js');
+}
+</script>
 </body>
 </html>

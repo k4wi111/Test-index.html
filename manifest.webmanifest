@@ -1,0 +1,18 @@
+{
+  "name": "IO Sano",
+  "short_name": "IO Sano",
+  "description": "Gestione magazzino offline-first",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f5f6a",
+  "icons": [
+    { "src": "icons/icon-120.png", "sizes": "120x120", "type": "image/png" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "icons/icon-167.png", "sizes": "167x167", "type": "image/png" },
+    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
