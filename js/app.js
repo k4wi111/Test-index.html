@@ -130,7 +130,11 @@ function initImport(){
         }
 
         S.saveToUndo();
-        S.products = S.normalizeProducts(arr);
+        const normalized = S.normalizeProducts(arr);
+        S.products.length = 0;
+        for (const p of normalized) {
+          S.products.push(p);
+        }
         S.rebuildGridIndex();
         S.saveProducts();
         scheduleRenderAll();
