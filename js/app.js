@@ -1,29 +1,3 @@
-
-function removeFromColumn(prod){
-  if (prod.colonna == null || prod.posizione == null) return;
-  const col = prod.colonna;
-  const pos = prod.posizione;
-
-  prod.colonna = null;
-  prod.posizione = null;
-
-  for (const p of S.products){
-    if (p.colonna === col && p.posizione > pos){
-      p.posizione -= 1;
-    }
-  }
-}
-
-function addToColumn(prod, col){
-  const colItems = S.products.filter(p => p.colonna === col);
-  const nextPos = colItems.length === 0
-    ? 1
-    : Math.max(...colItems.map(p => p.posizione)) + 1;
-
-  prod.colonna = col;
-  prod.posizione = nextPos;
-}
-
 // js/app.js
 'use strict';
 

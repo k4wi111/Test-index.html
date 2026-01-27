@@ -5,6 +5,25 @@ import { el, showNotification, closeCellDialogSafely } from './ui.js';
 import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveProducts, saveToUndo } from './state.js';
 import { getExpiryStatus } from './utils.js';
 
+
+function compactGridColumn(col){
+  // Compatta fisicamente la colonna: nessun buco tra le righe
+  const items = products
+    .filter(p => !p.inPrelievo && Number.isInteger(p.col) && p.col === col && Number.isInteger(p.row))
+    .sort((a,b) => a.row - b.row);
+
+  for (let i=0; i<items.length; i++){
+    items[i].row = i;
+    items[i].col = col;
+  }
+}
+
+function nextFreeRowInColumn(col){
+  // dopo compattazione, la prossima posizione libera è in fondo
+  const n = products.filter(p => !p.inPrelievo && Number.isInteger(p.col) && p.col === col && Number.isInteger(p.row)).length;
+  return n; // 0-based
+}
+
 let chooseResolve = null;
 
 export function chooseColumn(){
@@ -140,9 +159,12 @@ function openCellDialog(r,c,p,scheduleRenderAll){
 
     btnRow.appendChild(mkBtn('Metti in prelievo','secondary',()=>{
       saveToUndo();
-      p._prevRow = p.row; p._prevCol = p.col;
+      const oldCol = p.col;
+      p._prevRow = p.row;
+      p._prevCol = p.col;
       delete p.row; delete p.col;
       p.inPrelievo = true;
+      if (Number.isInteger(oldCol)) compactGridColumn(oldCol);
       rebuildGridIndex(); saveProducts(); scheduleRenderAll();
       closeCellDialogSafely();
     }));
