@@ -85,28 +85,10 @@ function compactColumn(col){
   S.rebuildGridIndex(); S.saveProducts();
 }
 
-async function exportJson(){
+function exportJson(){
   try{
     const dataStr = JSON.stringify(S.products, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
-
-    // Se disponibile (Chrome/Edge desktop/Android), permette di scegliere cartella/nome file
-    if (window.showSaveFilePicker){
-      const handle = await window.showSaveFilePicker({
-        suggestedName: 'magazzino-iosano.json',
-        types: [{
-          description: 'JSON',
-          accept: { 'application/json': ['.json'] }
-        }]
-      });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      showNotification('Fatto','File esportato.',false);
-      return;
-    }
-
-    // Fallback universale: download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -115,12 +97,9 @@ async function exportJson(){
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-    // Nota: su iPhone/iPad Safari la scelta cartella è gestita dal sistema (Download / File) e non si può forzare via codice.
   } catch(e){
     showNotification('Errore','Esportazione non riuscita',false);
   }
-}
 }
 
 function initImport(){
