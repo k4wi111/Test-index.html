@@ -85,10 +85,28 @@ function compactColumn(col){
   S.rebuildGridIndex(); S.saveProducts();
 }
 
-function exportJson(){
+async function exportJson(){
   try{
     const dataStr = JSON.stringify(S.products, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
+    const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+
+    // Se disponibile (Chrome/Edge desktop/Android), permette di scegliere cartella/nome file
+    if (window.showSaveFilePicker){
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'magazzino-iosano.json',
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      showNotification('Fatto','File esportato.',false);
+      return;
+    }
+
+    // Fallback universale: download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -97,47 +115,53 @@ function exportJson(){
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    // Nota: su iPhone/iPad Safari la scelta cartella è gestita dal sistema (Download / File) e non si può forzare via codice.
   } catch(e){
     showNotification('Errore','Esportazione non riuscita',false);
   }
+}
 }
 
 function initImport(){
   el.importJsonFile.addEventListener('change', (event)=>{
     const file = (event.target.files && event.target.files.length) ? event.target.files[0] : null;
     if (!file) return;
-    showNotification('Importazione','Sovrascrivere dati attuali?',true,()=>{
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try{
-          let txt = String(e.target.result || '');
-          // rimuovi BOM + spazi strani
-          txt = txt.replace(/^\uFEFF/, '').trim();
-          const parsed = JSON.parse(txt);
 
-          // accetta vari formati: array diretto, oppure {products:[...]}
-          let arr = null;
-          if (Array.isArray(parsed)) arr = parsed;
-          else if (parsed && Array.isArray(parsed.products)) arr = parsed.products;
-          else if (parsed && Array.isArray(parsed.items)) arr = parsed.items;
+    showNotification('Importazione','Sovrascrivere dati attuali?',true, async ()=>{
+      try{
+        let txt = await file.text();
+        txt = String(txt || '').replace(/^\uFEFF/, '').trim();
 
-          if (arr){
-            S.saveToUndo();
-            S.products = S.normalizeProducts(arr);
-            S.rebuildGridIndex();
-            S.saveProducts();
-            scheduleRenderAll();
-            showNotification('Fatto','Dati importati.',false);
-          } else {
-            showNotification('Errore','Formato JSON valido ma struttura non riconosciuta (serve un elenco prodotti).',false);
-          }
-        }catch(err){
-          showNotification('Errore','File JSON non valido.',false);
+        if (txt.startsWith('<!DOCTYPE') || txt.startsWith('<html')){
+          showNotification('Errore','Il file sembra HTML, non JSON. Probabile download/redirect o cache. Riesporta e riprova.',false);
+          return;
         }
-      };
-      reader.readAsText(file);
+
+        const parsed = JSON.parse(txt);
+
+        let arr = null;
+        if (Array.isArray(parsed)) arr = parsed;
+        else if (parsed && Array.isArray(parsed.products)) arr = parsed.products;
+        else if (parsed && Array.isArray(parsed.items)) arr = parsed.items;
+
+        if (!arr){
+          showNotification('Errore','JSON valido ma struttura non riconosciuta. Deve contenere un elenco prodotti.',false);
+          return;
+        }
+
+        S.saveToUndo();
+        S.products = S.normalizeProducts(arr);
+        S.rebuildGridIndex();
+        S.saveProducts();
+        scheduleRenderAll();
+        showNotification('Fatto','Dati importati.',false);
+      }catch(err){
+        showNotification('Errore', 'File JSON non valido. (' + (err && err.message ? err.message : 'errore') + ')', false);
+      }
     });
-    event.target.value='';
+
+    event.target.value = '';
   });
 }
 
