@@ -6,22 +6,21 @@ import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveP
 import { getExpiryStatus } from './utils.js';
 
 
-function compactGridColumn(col){
-  // Compatta fisicamente la colonna: nessun buco tra le righe
+function compactColumnGrid(col){
+  // Ricompone la colonna: nessun buco tra le righe (0..)
   const items = products
     .filter(p => !p.inPrelievo && Number.isInteger(p.col) && p.col === col && Number.isInteger(p.row))
     .sort((a,b) => a.row - b.row);
 
-  for (let i=0; i<items.length; i++){
+  for (let i=0;i<items.length;i++){
     items[i].row = i;
     items[i].col = col;
   }
 }
 
-function nextFreeRowInColumn(col){
-  // dopo compattazione, la prossima posizione libera è in fondo
-  const n = products.filter(p => !p.inPrelievo && Number.isInteger(p.col) && p.col === col && Number.isInteger(p.row)).length;
-  return n; // 0-based
+function nextRowInColumn(col){
+  // Dopo compattazione, la prossima riga libera è in fondo
+  return products.filter(p => !p.inPrelievo && Number.isInteger(p.col) && p.col === col && Number.isInteger(p.row)).length;
 }
 
 let chooseResolve = null;
@@ -142,16 +141,47 @@ function openCellDialog(r,c,p,scheduleRenderAll){
   if (p){
     btnRow.appendChild(mkBtn('Metti a scaffale','remove-grid',()=>{
       saveToUndo();
+      const oldCol = p.col;
       delete p.row; delete p.col;
+      if (Number.isInteger(oldCol)) compactColumnGrid(oldCol);
       rebuildGridIndex(); saveProducts(); scheduleRenderAll();
       closeCellDialogSafely();
     }));
 
     btnRow.appendChild(mkBtn('Sposta in colonna','secondary',()=>{
       chooseColumn().then(col=>{
-        if(col==null) return;
+        if (col==null) return;
+
+        const targetCol = Number(col);
+        if (!Number.isFinite(targetCol)) return;
+
         saveToUndo();
-        p.col = col; p.row = 0;
+
+        const oldCol = p.col;
+        // rimuovi dalla colonna di origine (se presente) e compatta
+        if (Number.isInteger(oldCol) && Number.isInteger(p.row)){
+          // temporaneamente sgancia per non interferire nel conteggio
+          delete p.row; delete p.col;
+          compactColumnGrid(oldCol);
+        }
+
+        // compatta la colonna target e inserisci in fondo
+        compactColumnGrid(targetCol);
+        const r = nextRowInColumn(targetCol);
+        if (r >= rows){
+          showNotification('Colonna Piena','Non ci sono righe libere in questa colonna.',false);
+          // ripristina (meglio: rimetti in origine in fondo)
+          if (Number.isInteger(oldCol)){
+            compactColumnGrid(oldCol);
+            const rr = nextRowInColumn(oldCol);
+            if (rr < rows){ p.col = oldCol; p.row = rr; }
+          }
+          rebuildGridIndex(); saveProducts(); scheduleRenderAll();
+          return;
+        }
+        p.col = targetCol;
+        p.row = r;
+
         rebuildGridIndex(); saveProducts(); scheduleRenderAll();
         closeCellDialogSafely();
       });
@@ -160,11 +190,10 @@ function openCellDialog(r,c,p,scheduleRenderAll){
     btnRow.appendChild(mkBtn('Metti in prelievo','secondary',()=>{
       saveToUndo();
       const oldCol = p.col;
-      p._prevRow = p.row;
-      p._prevCol = p.col;
+      p._prevRow = p.row; p._prevCol = p.col;
       delete p.row; delete p.col;
       p.inPrelievo = true;
-      if (Number.isInteger(oldCol)) compactGridColumn(oldCol);
+      if (Number.isInteger(oldCol)) compactColumnGrid(oldCol);
       rebuildGridIndex(); saveProducts(); scheduleRenderAll();
       closeCellDialogSafely();
     }));
@@ -172,8 +201,10 @@ function openCellDialog(r,c,p,scheduleRenderAll){
     btnRow.appendChild(mkBtn('Elimina','danger',()=>{
       showNotification('Conferma','Eliminare prodotto?',true,()=>{
         saveToUndo();
+        const oldCol = p.col;
         const idx = products.findIndex(x=>x.id===p.id);
         if(idx>=0) products.splice(idx,1);
+        if (Number.isInteger(oldCol)) compactColumnGrid(oldCol);
         rebuildGridIndex(); saveProducts(); scheduleRenderAll();
       });
       closeCellDialogSafely();

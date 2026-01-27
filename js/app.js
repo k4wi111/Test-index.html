@@ -86,65 +86,39 @@ function compactColumn(col){
 }
 
 function exportJson(){
-  try{
-    const dataStr = JSON.stringify(S.products, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'magazzino-iosano.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  } catch(e){
-    showNotification('Errore','Esportazione non riuscita',false);
-  }
+  const dataStr = JSON.stringify(S.products, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`magazzino-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
 }
 
 function initImport(){
   el.importJsonFile.addEventListener('change', (event)=>{
-    const file = (event.target.files && event.target.files.length) ? event.target.files[0] : null;
+    const file = event.target.files && event.target.files[0];
     if (!file) return;
-
-    showNotification('Importazione','Sovrascrivere dati attuali?',true, async ()=>{
-      try{
-        let txt = await file.text();
-        txt = String(txt || '').replace(/^\uFEFF/, '').trim();
-
-        if (txt.startsWith('<!DOCTYPE') || txt.startsWith('<html')){
-          showNotification('Errore','Il file sembra HTML, non JSON. Probabile download/redirect o cache. Riesporta e riprova.',false);
-          return;
-        }
-
-        const parsed = JSON.parse(txt);
-
-        let arr = null;
-        if (Array.isArray(parsed)) arr = parsed;
-        else if (parsed && Array.isArray(parsed.products)) arr = parsed.products;
-        else if (parsed && Array.isArray(parsed.items)) arr = parsed.items;
-
-        if (!arr){
-          showNotification('Errore','JSON valido ma struttura non riconosciuta. Deve contenere un elenco prodotti.',false);
-          return;
-        }
-
-        S.saveToUndo();
-        const normalized = S.normalizeProducts(arr);
-        S.products.length = 0;
-        for (const p of normalized) {
-          S.products.push(p);
-        }
-        S.rebuildGridIndex();
-        S.saveProducts();
-        scheduleRenderAll();
-        showNotification('Fatto','Dati importati.',false);
-      }catch(err){
-        showNotification('Errore', 'File JSON non valido. (' + (err && err.message ? err.message : 'errore') + ')', false);
-      }
+    showNotification('Importazione','Sovrascrivere dati attuali?',true,()=>{
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        try{
+          const imported = JSON.parse(String(e.target.result||''));
+          if (Array.isArray(imported)){
+            S.saveToUndo();
+            const normalized = S.normalizeProducts(imported);
+            S.products.length = 0;
+            for (const p of normalized) S.products.push(p);
+            S.rebuildGridIndex();
+            S.saveProducts();
+            scheduleRenderAll();
+            showNotification('Fatto','Dati importati.',false);
+          } else showNotification('Errore','Formato file non valido.',false);
+        }catch(err){ showNotification('Errore','File JSON non valido.',false); }
+      };
+      reader.readAsText(file);
     });
-
-    event.target.value = '';
+    event.target.value='';
   });
 }
 
