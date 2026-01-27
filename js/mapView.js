@@ -101,7 +101,16 @@ function openCellDialog(r,c,p,scheduleRenderAll){
   btnRow.textContent = '';
 
   const saveBtn = mkBtn('Salva','alt',()=>{
-    if (!p) return;
+    saveToUndo();
+    if (!p){
+      const name = el.dName.value.trim();
+      const lot = el.dLot.value.trim();
+      const expiryText = el.dExpiry.value.trim();
+      if (!name && !lot && !expiryText) return;
+      const newProd = { id: Math.random().toString(36).slice(2), name, lot, expiryText, dateAdded: new Date().toISOString(), row: r, col: c, inPrelievo: false };
+      products.unshift(newProd);
+      rebuildGridIndex(); saveProducts(); scheduleRenderAll(); closeCellDialogSafely(); return;
+    }
     saveToUndo();
     p.name = el.dName.value.trim();
     p.lot = el.dLot.value.trim();
