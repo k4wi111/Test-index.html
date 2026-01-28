@@ -621,6 +621,58 @@
     0 6px 18px rgba(0,0,0,.25);
 }
 
+
+/* === RESPONSIVE REFINEMENTS === */
+
+/* Toolbar spacing */
+.toolbar, .filter-tabs {
+  flex-wrap: wrap;
+  row-gap: 12px;
+}
+
+/* Separate reset filters from import/export */
+.actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.actions-group .spacer {
+  flex: 1 1 100%;
+}
+
+/* Product list buttons */
+[data-btns] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Buttons consistency */
+button {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+/* Tablet-specific tuning */
+@media (min-width: 600px) and (max-width: 900px) {
+  .filter-tabs button {
+    flex: 1 1 22%;
+  }
+  [data-btns] {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+  .filter-tabs button {
+    flex: 1 1 48%;
+  }
+}
+
 </style>
 </head>
 <body>
