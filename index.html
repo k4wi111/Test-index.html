@@ -1,3 +1,5 @@
+
+<!-- index.html MODIFICATO: aggiunto filtro TAB attivo -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -618,7 +620,14 @@
         <input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
         <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
       </div>
-      <div class="toolbar" style="justify-content:flex-end">
+      
+      <div class="toolbar" style="justify-content:flex-start; gap:10px">
+        <button class="tab active" data-list-filter="all" type="button">Tutti</button>
+        <button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
+        <button class="tab" data-list-filter="terra" type="button">Terra</button>
+        <button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
+      </div>
+<div class="toolbar" style="justify-content:flex-end">
         <button class="ghost" id="resetSearchBtn" type="button" style="font-size:0.85rem; padding: 8px 14px;">Resetta filtri</button>
       </div>
     </div>
