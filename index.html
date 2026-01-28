@@ -1,3 +1,5 @@
+
+<!-- index.html MODIFICATO: aggiunto filtro TAB attivo -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -118,17 +120,13 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.10);
       user-select: none;
     }
-    
-.tab.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: 2px solid white;
-      box-shadow:
-        0 0 0 3px rgba(255,255,255,0.35),
-        0 8px 25px rgba(0,0,0,0.25);
-      transform: none;
+    .tab.active {
+      background: white;
+      color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      border-color: white;
     }
-
     .tab:not(.active):active { transform: scale(0.98); }
 
     .card {
@@ -545,17 +543,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
-      
-.tab.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: 2px solid white;
-      box-shadow:
-        0 0 0 3px rgba(255,255,255,0.35),
-        0 8px 25px rgba(0,0,0,0.25);
-      transform: none;
-    }
-
+      .tab.active { transform: none; }
       button:active, .cell:active, .list-item:active, .card:active { transform: none; }
       #notification-modal, .modal-content { transition: none !important; }
     }
@@ -632,7 +620,14 @@
         <input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
         <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
       </div>
-      <div class="toolbar" style="justify-content:flex-end">
+      
+      <div class="toolbar" style="justify-content:flex-start; gap:10px">
+        <button class="tab active" data-list-filter="all" type="button">Tutti</button>
+        <button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
+        <button class="tab" data-list-filter="terra" type="button">Terra</button>
+        <button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
+      </div>
+<div class="toolbar" style="justify-content:flex-end">
         <button class="ghost" id="resetSearchBtn" type="button" style="font-size:0.85rem; padding: 8px 14px;">Resetta filtri</button>
       </div>
     </div>
