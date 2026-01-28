@@ -579,7 +579,49 @@
     background: rgba(255,255,255,0.9);
     margin-left: 10px;
   }
-  </style>
+  
+/* === FIX UI FILTRI & RICERCA === */
+.filter-tabs {
+  display:flex;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.search-wrap {
+  position:relative;
+}
+
+.search-wrap .icon {
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  opacity:.6;
+}
+
+#search {
+  padding-left:44px;
+}
+
+.tab {
+  transition: background .15s, box-shadow .15s, transform .1s;
+}
+
+.tab:active {
+  transform: scale(0.97);
+}
+
+.tab.active {
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.35),
+    inset 0 -2px 6px rgba(0,0,0,.25),
+    0 6px 18px rgba(0,0,0,.25);
+}
+
+</style>
 </head>
 <body>
 <header>
@@ -620,13 +662,13 @@
     <div class="card" style="padding: 20px 28px;">
       <div style="position:relative;">
         
-<div class="toolbar" style="justify-content:flex-start; gap:10px; margin-top:10px">
+<div class="filter-tabs">
   <button class="tab active" data-list-filter="all" type="button">Tutti</button>
   <button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
   <button class="tab" data-list-filter="terra" type="button">Terra</button>
   <button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
 </div>
-<input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
+<div class="search-wrap"><span class="icon">🔍</span><input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
         <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
       </div>
       <div class="toolbar" style="justify-content:flex-end">
