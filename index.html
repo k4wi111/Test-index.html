@@ -119,10 +119,10 @@
       user-select: none;
     }
     .tab.active{
-  background:linear-gradient(135deg,#667eea,#764ba2);
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
   color:#fff;
-  border:2px solid #fff;
-  box-shadow:0 0 0 3px rgba(255,255,255,.35),0 8px 25px rgba(0,0,0,.25);
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
     .tab:not(.active):active { transform: scale(0.98); }
 
@@ -541,10 +541,10 @@
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
       .tab.active{
-  background:linear-gradient(135deg,#667eea,#764ba2);
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
   color:#fff;
-  border:2px solid #fff;
-  box-shadow:0 0 0 3px rgba(255,255,255,.35),0 8px 25px rgba(0,0,0,.25);
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
       button:active, .cell:active, .list-item:active, .card:active { transform: none; }
       #notification-modal, .modal-content { transition: none !important; }
@@ -612,13 +612,11 @@
   transform: scale(0.97);
 }
 
-.tab.active {
+.tab.active{
   background:linear-gradient(135deg,#5a6df0,#7b3fe4);
   color:#fff;
-  box-shadow:
-    0 0 0 3px rgba(255,255,255,.35),
-    inset 0 -2px 6px rgba(0,0,0,.25),
-    0 6px 18px rgba(0,0,0,.25);
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
 
 
@@ -683,13 +681,11 @@ button {
 }
 
 /* Active TAB: visible ring on light background */
-.tab.active {
-  background: linear-gradient(135deg, #5a6df0, #7b3fe4);
-  color: #fff;
-  box-shadow:
-    0 0 0 3px rgba(90,109,240,0.45),
-    inset 0 -2px 6px rgba(0,0,0,0.25),
-    0 6px 18px rgba(0,0,0,0.25);
+.tab.active{
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
 }
 
 /* Press feedback remains */
