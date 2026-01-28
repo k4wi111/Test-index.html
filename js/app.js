@@ -150,16 +150,6 @@ function main(){
   el.exportJsonBtn.addEventListener('click', exportJson);
   initImport();
 
-  el.listFilterBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      el.listFilterBtns.forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      window.__listFilter = btn.dataset.listFilter;
-      scheduleRenderList();
-    });
-  });
-
-
   // PDF button left as-is but optional: show notice if missing library
   el.exportPdfBtn.addEventListener('click', ()=>showNotification('Info','PDF opzionale: aggiungi jspdf.umd.min.js nella root se lo vuoi.',false));
 

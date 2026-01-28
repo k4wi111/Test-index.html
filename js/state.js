@@ -10,8 +10,7 @@ export const LS_EVENTS_KEY = "warehouse_events_v1";
 export let products = [];
 export let events = [];
 export let undoStack = [];
-export let gridMap = new Map();
-export let listFilter = 'all'; // "r,c" -> product id
+export let gridMap = new Map(); // "r,c" -> product id
 
 export const keyRC = (r,c) => `${r},${c}`;
 
