@@ -70,6 +70,7 @@ export const el = {
 
   installBar: $('installBar'),
   installBtn: $('installBtn'),
+  listFilterBtns: document.querySelectorAll('[data-list-filter]'),
 };
 
 export function updateUndoButton(hasUndo){

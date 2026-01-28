@@ -18,9 +18,14 @@ export function makeBtn(cls, text, action, id){
 export function renderList(){
   const q = (el.search.value || '').trim().toLowerCase();
   const unplaced = [];
+  const f = (window.__listFilter || 'all');
   const placed = [];
 
   for (const p of products){
+    if (f==='prelievo' && !p.inPrelievo) continue;
+    if (f==='terra' && (p.inPrelievo || !Number.isInteger(p.row))) continue;
+    if (f==='scaffale' && (p.inPrelievo || Number.isInteger(p.row))) continue;
+
     if (q){
       const n = (p.name || '').toLowerCase();
       const l = (p.lot || '').toLowerCase();
