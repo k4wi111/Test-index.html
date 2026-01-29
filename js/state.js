@@ -7,12 +7,24 @@ export const cols = 10;
 export const LS_KEY = "warehouse_products_v6";
 export const LS_EVENTS_KEY = "warehouse_events_v1";
 
+// UI state (in-memory)
+export let listFilter = 'all'; // all | scaffale | terra | prelievo
+
 export let products = [];
 export let events = [];
 export let undoStack = [];
 export let gridMap = new Map(); // "r,c" -> product id
 
 export const keyRC = (r,c) => `${r},${c}`;
+
+export function setListFilter(value){
+  const v = String(value || 'all');
+  listFilter = (v === 'scaffale' || v === 'terra' || v === 'prelievo') ? v : 'all';
+}
+
+export function getListFilter(){
+  return listFilter;
+}
 
 export function uid(){
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -88,12 +100,39 @@ export function logEvent(type, product){
   }catch(e){}
 }
 
+function isValidCell(r,c){
+  return Number.isInteger(r) && Number.isInteger(c) && r >= 0 && r < rows && c >= 0 && c < cols;
+}
+
+// Sanifica posizioni fuori range e collisioni (2 prodotti stessa cella)
+export function sanitizeGridPlacements(){
+  const occupied = new Set();
+  // products è già ordinato per dateAdded desc (più recente prima)
+  for (const p of products){
+    if (p.inPrelievo) continue;
+    if (!isValidCell(p.row, p.col)){
+      if (Number.isInteger(p.row)) delete p.row;
+      if (Number.isInteger(p.col)) delete p.col;
+      continue;
+    }
+    const k = keyRC(p.row, p.col);
+    if (occupied.has(k)){
+      // collisione: lasciamo la più recente in cella e togliamo la posizione alle altre
+      delete p.row; delete p.col;
+      continue;
+    }
+    occupied.add(k);
+  }
+}
+
 export function rebuildGridIndex(){
   gridMap = new Map();
   for (const p of products){
     if (p.inPrelievo) continue;
-    if (Number.isInteger(p.row) && Number.isInteger(p.col)){
-      gridMap.set(keyRC(p.row, p.col), p.id);
+    if (isValidCell(p.row, p.col)){
+      const k = keyRC(p.row, p.col);
+      // se ci fosse qualche collisione residua, manteniamo il primo che arriva (più recente)
+      if (!gridMap.has(k)) gridMap.set(k, p.id);
     }
   }
 }
@@ -106,6 +145,14 @@ export function productAt(r,c){
 
 export function countOccupied(){
   return gridMap.size;
+}
+
+// Commit atomico: prima sanifica, poi rebuild index, poi salva
+export function commitProducts({saveEventsToo=false} = {}){
+  try{ sanitizeGridPlacements(); }catch(e){}
+  rebuildGridIndex();
+  saveProducts();
+  if (saveEventsToo) saveEvents();
 }
 
 export function saveToUndo(){
@@ -121,9 +168,7 @@ export function undoLastAction(){
   if (last && last.state){
     products = deepClone(last.state);
     if (last.events) events = deepClone(last.events);
-    rebuildGridIndex();
-    saveProducts();
-    saveEvents();
+    commitProducts({saveEventsToo:true});
     return true;
   }
   return false;
@@ -132,5 +177,5 @@ export function undoLastAction(){
 export function initState(){
   products = normalizeProducts(loadProducts());
   events = loadEvents();
-  rebuildGridIndex();
+  commitProducts();
 }
