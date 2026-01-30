@@ -21,11 +21,6 @@ export function renderList(){
   const placed = [];
 
   for (const p of products){
-    const f = window.__listFilter || 'all';
-    if (f==='prelievo' && !p.inPrelievo) continue;
-    if (f==='terra' && (p.inPrelievo || !Number.isInteger(p.row))) continue;
-    if (f==='scaffale' && (p.inPrelievo || Number.isInteger(p.row))) continue;
-
     if (q){
       const n = (p.name || '').toLowerCase();
       const l = (p.lot || '').toLowerCase();
