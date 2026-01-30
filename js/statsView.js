@@ -40,14 +40,14 @@ export function renderStatsView(){
   const placed = products.filter(p=>Number.isInteger(p.row)&&Number.isInteger(p.col)&&!p.inPrelievo).length;
   const unplaced = total - placed;
 
-  if (el.statsSummary) el.statsSummary.textContent = `Totale: ${total} • A terra: ${placed} • A scaffale: ${unplaced} • In prelievo: ${inPrel}`;
+  el.statsSummary.textContent = `Totale: ${total} • A terra: ${placed} • A scaffale: ${unplaced} • In prelievo: ${inPrel}`;
 
-  if (el.statsTopAdded) renderPairs(el.statsTopAdded, top('add'));
-  if (el.statsTopRemoved) renderPairs(el.statsTopRemoved, top('remove'));
+  renderPairs(el.statsTopAdded, top('add'));
+  renderPairs(el.statsTopRemoved, top('remove'));
 
   const days = products.map(p => (daysSinceProduction(p) ?? daysSinceISO(p.dateAdded))).filter(x=>x!=null);
   const avg = days.length ? Math.round(days.reduce((a,b)=>a+b,0)/days.length) : null;
-  if (el.statsAvgDwell) el.statsAvgDwell.textContent = avg!=null ? `Giacenza media stimata: ${avg} giorni` : 'Giacenza media stimata: —';
+  el.statsAvgDwell.textContent = avg!=null ? `Giacenza media stimata: ${avg} giorni` : 'Giacenza media stimata: —';
 
   const buckets = { skull:[], red:[], yellow:[], green:[] };
   for (const p of products){
@@ -56,8 +56,8 @@ export function renderStatsView(){
     if (!s) continue;
     buckets[s.cls].push(p);
   }
-  if (el.statsListSkull) renderBucket(el.statsListSkull, buckets.skull);
-  if (el.statsListRed) renderBucket(el.statsListRed, buckets.red);
-  if (el.statsListYellow) renderBucket(el.statsListYellow, buckets.yellow);
-  if (el.statsListGreen) renderBucket(el.statsListGreen, buckets.green);
+  renderBucket(el.statsListSkull, buckets.skull);
+  renderBucket(el.statsListRed, buckets.red);
+  renderBucket(el.statsListYellow, buckets.yellow);
+  renderBucket(el.statsListGreen, buckets.green);
 }

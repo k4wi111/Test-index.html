@@ -3,118 +3,76 @@
 
 import { $ } from './utils.js';
 
-// IMPORTANT: `el` must stay the same object reference because other modules import it.
-// We therefore MUTATE its properties in refreshUI() instead of reassigning `el`.
-export const el = Object.create(null);
+export const el = {
+  undoBtn: $('undoBtn'),
+  tabLista: $('tab-lista'),
+  tabMappa: $('tab-mappa'),
+  tabStats: $('tab-stats'),
+  viewLista: $('view-lista'),
+  viewMappa: $('view-mappa'),
+  viewStats: $('view-stats'),
 
-function setEl(key, id){
-  el[key] = $(id) || null;
-}
+  name: $('name'),
+  lot: $('lot'),
+  expiry: $('expiry'),
+  clearBtn: $('clearBtn'),
+  saveBtn: $('saveBtn'),
 
-// Refresh DOM references (call this after DOMContentLoaded, and optionally on retries)
-export function refreshUI(){
-  // Core navigation
-  setEl('undoBtn', 'undoBtn');
-  setEl('tabLista', 'tab-lista');
-  setEl('tabMappa', 'tab-mappa');
-  setEl('tabStats', 'tab-stats');
-  setEl('viewLista', 'view-lista');
-  setEl('viewMappa', 'view-mappa');
-  setEl('viewStats', 'view-stats');
+  search: $('search'),
+  resetSearchBtn: $('resetSearchBtn'),
+  listUnplaced: $('listUnplaced'),
+  listPlaced: $('listPlaced'),
 
-  // Add form
-  setEl('name', 'name');
-  setEl('lot', 'lot');
-  setEl('expiry', 'expiry');
-  setEl('clearBtn', 'clearBtn');
-  setEl('saveBtn', 'saveBtn');
+  exportPdfBtn: $('exportPdfBtn'),
+  exportJsonBtn: $('exportJsonBtn'),
+  importJsonFile: $('importJsonFile'),
 
-  // List UI
-  setEl('search', 'search');
-  setEl('resetSearchBtn', 'resetSearchBtn');
-  setEl('listEmptyState', 'listEmptyState');
-  setEl('listUnplaced', 'listUnplaced');
-  setEl('listPlaced', 'listPlaced');
+  grid: $('grid'),
+  axisTop: $('axisTop'),
+  axisBottom: $('axisBottom'),
+  axisLeft: $('axisLeft'),
+  axisRight: $('axisRight'),
+  occupiedBadge: $('occupiedBadge'),
 
-  // Import/Export
-  setEl('exportPdfBtn', 'exportPdfBtn');
-  setEl('exportJsonBtn', 'exportJsonBtn');
-  setEl('importJsonFile', 'importJsonFile');
+  cellDialog: $('cellDialog'),
+  cellTitle: $('cellTitle'),
+  dName: $('dName'),
+  dLot: $('dLot'),
+  dExpiry: $('dExpiry'),
 
-  // Map grid
-  setEl('gridFrame', 'gridFrame');
-  setEl('grid', 'grid');
-  setEl('axisTop', 'axisTop');
-  setEl('axisBottom', 'axisBottom');
-  setEl('axisLeft', 'axisLeft');
-  setEl('axisRight', 'axisRight');
-  setEl('occupiedBadge', 'occupiedBadge');
+  colDialog: $('colDialog'),
+  colSelect: $('colSelect'),
+  colCancel: $('colCancel'),
+  colOk: $('colOk'),
 
-  // Cell dialog
-  setEl('cellDialog', 'cellDialog');
-  setEl('cellTitle', 'cellTitle');
-  setEl('dName', 'dName');
-  setEl('dLot', 'dLot');
-  setEl('dExpiry', 'dExpiry');
+  tpl: $('list-item-tpl'),
+  editDialog: $('editDialog'),
+  eName: $('eName'),
+  eLot: $('eLot'),
+  eExpiry: $('eExpiry'),
+  eCancel: $('eCancel'),
+  eSave: $('eSave'),
 
-  // Column dialog
-  setEl('colDialog', 'colDialog');
-  setEl('colSelect', 'colSelect');
-  setEl('colCancel', 'colCancel');
-  setEl('colOk', 'colOk');
+  statsSummary: $('statsSummary'),
+  statsTopAdded: $('statsTopAdded'),
+  statsTopRemoved: $('statsTopRemoved'),
+  statsAvgDwell: $('statsAvgDwell'),
+  statsListSkull: $('statsListSkull'),
+  statsListRed: $('statsListRed'),
+  statsListYellow: $('statsListYellow'),
+  statsListGreen: $('statsListGreen'),
 
-  // List template + edit dialog
-  setEl('tpl', 'list-item-tpl');
-  setEl('editDialog', 'editDialog');
-  setEl('eName', 'eName');
-  setEl('eLot', 'eLot');
-  setEl('eExpiry', 'eExpiry');
-  setEl('eCancel', 'eCancel');
-  setEl('eSave', 'eSave');
+  modal: $('notification-modal'),
+  modalTitle: $('modalTitle'),
+  modalMessage: $('modalMessage'),
+  modalConfirmBtn: $('modalConfirmBtn'),
+  modalCancelBtn: $('modalCancelBtn'),
 
-  // Stats
-  setEl('statsSummary', 'statsSummary');
-  setEl('statsTopAdded', 'statsTopAdded');
-  setEl('statsTopRemoved', 'statsTopRemoved');
-  setEl('statsAvgDwell', 'statsAvgDwell');
-  setEl('statsListSkull', 'statsListSkull');
-  setEl('statsListRed', 'statsListRed');
-  setEl('statsListYellow', 'statsListYellow');
-  setEl('statsListGreen', 'statsListGreen');
-
-  // Modal
-  setEl('modal', 'notification-modal');
-  setEl('modalTitle', 'modalTitle');
-  setEl('modalMessage', 'modalMessage');
-  setEl('modalConfirmBtn', 'modalConfirmBtn');
-  setEl('modalCancelBtn', 'modalCancelBtn');
-
-  // Install bar
-  setEl('installBar', 'installBar');
-  setEl('installBtn', 'installBtn');
-
-  return el;
-}
-
-// Dev helper: warns if required elements are missing (typical cause of "app frozen")
-export function checkUI(){
-  const required = [
-    'tabLista','tabMappa','tabStats',
-    'viewLista','viewMappa','viewStats',
-    'grid'
-  ];
-
-  const missing = required.filter(k => !el[k]);
-  if (missing.length){
-    console.warn('[IO Sano][UI] Missing DOM elements:', missing);
-  } else {
-    console.log('[IO Sano][UI] Core DOM elements OK');
-  }
-  return missing;
-}
+  installBar: $('installBar'),
+  installBtn: $('installBtn'),
+};
 
 export function updateUndoButton(hasUndo){
-  if (!el.undoBtn) return;
   el.undoBtn.style.display = hasUndo ? 'inline-flex' : 'none';
 }
 
@@ -125,21 +83,14 @@ export function closeCellDialogSafely(){
     try { cd.close(); } catch(e) {}
     try { cd.open = false; } catch(e) {}
     cd.removeAttribute('open');
-
-    // iOS/Safari workaround: force repaint to avoid dialog staying stuck
     cd.style.display = 'none';
     setTimeout(() => { cd.style.display = ''; }, 0);
   }catch(e){}
 }
 
 export function showNotification(title, message, isConfirm, onConfirm){
-  if (!el.modal || !el.modalTitle || !el.modalMessage || !el.modalConfirmBtn || !el.modalCancelBtn) {
-    console.warn('[IO Sano] Modal elements missing, cannot show notification:', title, message);
-    return;
-  }
-
-  el.modalTitle.textContent = String(title ?? '');
-  el.modalMessage.textContent = String(message ?? '');
+  el.modalTitle.textContent = title;
+  el.modalMessage.textContent = message;
 
   if (isConfirm) {
     el.modalConfirmBtn.style.display = 'inline-flex';
