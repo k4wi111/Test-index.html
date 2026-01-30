@@ -118,13 +118,12 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.10);
       user-select: none;
     }
-    .tab.active {
-      background: white;
-      color: #667eea;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-      border-color: white;
-    }
+    .tab.active{
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
     .tab:not(.active):active { transform: scale(0.98); }
 
     .card {
@@ -541,7 +540,12 @@
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; }
-      .tab.active { transform: none; }
+      .tab.active{
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
       button:active, .cell:active, .list-item:active, .card:active { transform: none; }
       #notification-modal, .modal-content { transition: none !important; }
     }
@@ -575,7 +579,129 @@
     background: rgba(255,255,255,0.9);
     margin-left: 10px;
   }
-  </style>
+  
+/* === FIX UI FILTRI & RICERCA === */
+.filter-tabs {
+  display:flex;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.search-wrap {
+  position:relative;
+}
+
+.search-wrap .icon {
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  opacity:.6;
+}
+
+#search {
+  padding-left:44px;
+}
+
+.tab {
+  transition: background .15s, box-shadow .15s, transform .1s;
+}
+
+.tab:active {
+  transform: scale(0.97);
+}
+
+.tab.active{
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+
+
+/* === RESPONSIVE REFINEMENTS === */
+
+/* Toolbar spacing */
+.toolbar, .filter-tabs {
+  flex-wrap: wrap;
+  row-gap: 12px;
+}
+
+/* Separate reset filters from import/export */
+.actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.actions-group .spacer {
+  flex: 1 1 100%;
+}
+
+/* Product list buttons */
+[data-btns] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Buttons consistency */
+button {
+  min-height: 44px;
+  border-radius: 14px;
+}
+
+/* Tablet-specific tuning */
+@media (min-width: 600px) and (max-width: 900px) {
+  .filter-tabs button {
+    flex: 1 1 22%;
+  }
+  [data-btns] {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+  .filter-tabs button {
+    flex: 1 1 48%;
+  }
+}
+
+
+/* === UI TWEAKS V2 === */
+
+/* Move Reset Filters slightly up */
+#resetSearchBtn {
+  margin-top: -6px;
+  align-self: center;
+}
+
+/* Active TAB: visible ring on light background */
+.tab.active{
+  background:linear-gradient(135deg,#5a6df0,#7b3fe4);
+  color:#fff;
+  border:2px solid #2e1a72;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+
+/* Press feedback remains */
+.tab:active {
+  transform: scale(0.97);
+}
+
+
+/* === FINAL FILTER LAYOUT FIX === */
+.filter-reset-row {
+  margin-top: 10px;
+  margin-bottom: 18px; /* creates clear separation from import/export */
+}
+
+
+</style>
 </head>
 <body>
 <header>
@@ -615,11 +741,18 @@
 
     <div class="card" style="padding: 20px 28px;">
       <div style="position:relative;">
-        <input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
+        
+<div class="filter-tabs">
+  <button class="tab active" data-list-filter="all" type="button">Tutti</button>
+  <button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
+  <button class="tab" data-list-filter="terra" type="button">Terra</button>
+  <button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
+</div>
+<div class="search-wrap"><span class="icon">🔍</span><input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
         <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
       </div>
       <div class="toolbar" style="justify-content:flex-end">
-        <button class="ghost" id="resetSearchBtn" type="button" style="font-size:0.85rem; padding: 8px 14px;">Resetta filtri</button>
+        
       </div>
     </div>
 

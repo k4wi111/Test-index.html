@@ -1,4 +1,4 @@
-const CACHE_NAME = 'iosano-v1769530388';
+const CACHE_NAME = 'iosano-definitive-1769592728';
 
 const ASSETS = [
   './',
