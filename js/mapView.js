@@ -2,7 +2,7 @@
 'use strict';
 
 import { el, showNotification, closeCellDialogSafely } from './ui.js';
-import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveProducts, saveToUndo } from './state.js';
+import { rows, cols, products, productAt, countOccupied, rebuildGridIndex, saveProducts, saveToUndo, logEvent } from './state.js';
 import { getExpiryStatus } from './utils.js';
 
 
@@ -127,6 +127,7 @@ function openCellDialog(r,c,p,scheduleRenderAll){
       if (!name && !lot && !expiryText) return;
       const newProd = { id: Math.random().toString(36).slice(2), name, lot, expiryText, dateAdded: new Date().toISOString(), row: r, col: c, inPrelievo: false };
       products.unshift(newProd);
+      logEvent('add', newProd);
       rebuildGridIndex(); saveProducts(); scheduleRenderAll(); closeCellDialogSafely(); return;
     }
     saveToUndo();
@@ -188,6 +189,13 @@ function openCellDialog(r,c,p,scheduleRenderAll){
     }));
 
     btnRow.appendChild(mkBtn('Metti in prelievo','secondary',()=>{
+      // prevent duplicates: only one item per product name in prelievo
+      const key = String(p.name||'').trim().toLowerCase();
+      if (key && products.some(x => x !== p && x.inPrelievo && String(x.name||'').trim().toLowerCase() === key)){
+        showNotification('Info','Prodotto già presente in prelievo.',false);
+        closeCellDialogSafely();
+        return;
+      }
       saveToUndo();
       const oldCol = p.col;
       p._prevRow = p.row; p._prevCol = p.col;
@@ -202,6 +210,7 @@ function openCellDialog(r,c,p,scheduleRenderAll){
       showNotification('Conferma','Eliminare prodotto?',true,()=>{
         saveToUndo();
         const oldCol = p.col;
+        logEvent('remove', p);
         const idx = products.findIndex(x=>x.id===p.id);
         if(idx>=0) products.splice(idx,1);
         if (Number.isInteger(oldCol)) compactColumnGrid(oldCol);

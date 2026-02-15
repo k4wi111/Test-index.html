@@ -2,7 +2,7 @@
 'use strict';
 
 import { el, showNotification } from './ui.js';
-import { products, saveProducts, saveToUndo, rebuildGridIndex } from './state.js';
+import { products, saveProducts, saveToUndo, rebuildGridIndex, rows, logEvent } from './state.js';
 import { getExpiryStatus, daysSinceProduction, daysSinceISO, giacenzaStatus } from './utils.js';
 
 export function makeBtn(cls, text, action, id){
@@ -109,18 +109,23 @@ export function initListInteractions({switchTab, openEditDialog, chooseColumn, f
     if (action === 'edit'){ openEditDialog(id); return; }
 
     if (action === 'prel'){
-      const name = (p.name||'').trim();
-      if (products.some(x => x!==p && (x.name||'').trim()===name && x.inPrelievo)){
-        showNotification('Info','Prodotto già in prelievo',true); return;
+      // prevent duplicates: only one item per product name in prelievo
+      const key = String(p.name||'').trim().toLowerCase();
+      if (key && products.some(x => x !== p && x.inPrelievo && String(x.name||'').trim().toLowerCase() === key)){
+        showNotification('Info','Prodotto già presente in prelievo.',false);
+        return;
       }
       saveToUndo();
+      let oldCol = null;
       if (Number.isInteger(p.row) && Number.isInteger(p.col)){
+        oldCol = p.col;
         p._prevRow = p.row; p._prevCol = p.col;
         delete p.row; delete p.col;
       }
       p.inPrelievo = true;
       rebuildGridIndex();
       saveProducts();
+      if (Number.isInteger(oldCol) && typeof compactColumn === 'function') compactColumn(oldCol);
       scheduleRenderAll();
       return;
     }
@@ -128,10 +133,31 @@ export function initListInteractions({switchTab, openEditDialog, chooseColumn, f
     if (action === 'prel_done'){
       saveToUndo();
       p.inPrelievo = false;
-      if (Number.isInteger(p._prevRow) && Number.isInteger(p._prevCol)){
+
+      // If the item came from the map, restore it coherently in the original column.
+      // NOTE: during "metti in prelievo" the column gets compacted, so the original row may no longer be valid.
+      if (Number.isInteger(p._prevCol)){
+        const col = p._prevCol;
+        delete p._prevRow; delete p._prevCol;
+
+        // Compact the column first, then place the item at the first free row (bottom).
+        if (typeof compactColumn === 'function') compactColumn(col);
+        const r = products.filter(x => !x.inPrelievo && Number.isInteger(x.col) && x.col===col && Number.isInteger(x.row)).length;
+
+        if (r < rows){
+          p.col = col;
+          p.row = r;
+        } else {
+          // Column full: keep it unplaced and notify.
+          delete p.row; delete p.col;
+          showNotification('Colonna piena','Non c\'è spazio per rimettere il prodotto in questa colonna.',false);
+        }
+      } else if (Number.isInteger(p._prevRow) && Number.isInteger(p._prevCol)){
+        // Fallback (older data format): restore exact position
         p.row = p._prevRow; p.col = p._prevCol;
         delete p._prevRow; delete p._prevCol;
       }
+
       rebuildGridIndex();
       saveProducts();
       scheduleRenderAll();
@@ -169,6 +195,7 @@ export function initListInteractions({switchTab, openEditDialog, chooseColumn, f
       showNotification('Conferma','Eliminare questo prodotto?',true,()=>{
         saveToUndo();
         const oldCol = p.col;
+        logEvent('remove', p);
         const idx = products.findIndex(x => x.id === id);
         if (idx>=0) products.splice(idx,1);
         rebuildGridIndex();

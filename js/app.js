@@ -60,16 +60,17 @@ function openEditDialog(id){
   try{ el.editDialog.showModal(); }catch(e){ el.editDialog.setAttribute('open',''); }
 }
 function initEditDialog(){
-  el.eCancel.addEventListener('click', ()=>{ try{ el.editDialog.close(); }catch(e){} editTargetId=null; });
+  el.eCancel.addEventListener('click', ()=>{ try{ el.editDialog.close(); }catch(e){} el.editDialog.removeAttribute('open'); editTargetId=null; });
+  el.editDialog.addEventListener('cancel', (ev)=>{ ev.preventDefault(); try{ el.editDialog.close(); }catch(e){} el.editDialog.removeAttribute('open'); el.editDialog.removeAttribute('open'); editTargetId=null; });
   el.eSave.addEventListener('click', ()=>{
     if (!editTargetId) return;
     const p = S.products.find(x=>x.id===editTargetId); if (!p) return;
-    if (p.inPrelievo){ showNotification('Info','Prodotto in prelievo',false); return; }
+    
     S.saveToUndo();
     p.name=el.eName.value.trim(); p.lot=el.eLot.value.trim(); p.expiryText=(el.eExpiry.value||'').trim();
     S.logEvent('edit', p);
     S.saveProducts(); S.saveEvents();
-    try{ el.editDialog.close(); }catch(e){}
+    try{ el.editDialog.close(); }catch(e){} el.editDialog.removeAttribute('open');
     editTargetId=null;
     scheduleRenderAll();
   });
