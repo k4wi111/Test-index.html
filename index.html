@@ -1,26 +1,24 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>IO Sano</title>
-
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-  <meta name="apple-mobile-web-app-title" content="IO Sano"/>
-  <meta name="application-name" content="IO Sano"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="theme-color" content="#667eea"/>
-
-  <link rel="manifest" href="manifest.webmanifest"/>
-  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120.png"/>
-  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png"/>
-  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png"/>
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png"/>
-  <link type="image/png" rel="icon" sizes="192x192" href="icons/icon-192.png"/>
-  <link type="image/png" rel="icon" sizes="512x512" href="icons/icon-512.png"/>
-
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<title>IO Sano</title>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="IO Sano" name="apple-mobile-web-app-title"/>
+<meta content="IO Sano" name="application-name"/>
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="#667eea" name="theme-color"/>
+<link href="manifest.webmanifest" rel="manifest"/>
+<link href="icons/icon-120.png" rel="apple-touch-icon" sizes="120x120"/>
+<link href="icons/icon-152.png" rel="apple-touch-icon" sizes="152x152"/>
+<link href="icons/icon-167.png" rel="apple-touch-icon" sizes="167x167"/>
+<link href="icons/icon-180.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="icons/icon-192.png" rel="icon" sizes="192x192" type="image/png"/>
+<link href="icons/icon-512.png" rel="icon" sizes="512x512" type="image/png"/>
+<style>
 :root {
       --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --card-bg: rgba(255, 255, 255, 0.96);
@@ -701,233 +699,220 @@ button {
 }
 
 
+
+
+/* Stats expiry layout: Green left, others right */
+.expiry-layout{display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-top:12px}
+.expiry-left{flex:2; min-width:320px}
+.expiry-right{flex:1; min-width:240px; display:flex; flex-direction:column; gap:14px}
+@media (max-width: 720px){
+  .expiry-left,.expiry-right{flex:1; min-width:0}
+}
+
+/* UI: Resetta filtri spacing (balanced) */
+.reset-toolbar{
+  margin-top:10px;
+  margin-bottom:12px;
+}
+#resetSearchBtn{outline:none !important;}
 </style>
 </head>
 <body>
 <header>
-  <div><h1>IO Sano</h1></div>
-  <button class="ghost" id="undoBtn" style="display:none; padding: 8px 16px; font-size: 0.85rem; border-radius: 25px;">↶ Annulla</button>
+<div><h1>IO Sano</h1></div>
+<button class="ghost" id="undoBtn" style="display:none; padding: 8px 16px; font-size: 0.85rem; border-radius: 25px;">↶ Annulla</button>
 </header>
-
 <nav class="tabs">
-  <button class="tab active" id="tab-lista" type="button">Lista Prodotti</button>
-  <button class="tab" id="tab-mappa" type="button">Mappa</button>
-  <button class="tab" id="tab-stats" type="button">Statistiche</button>
+<button class="tab active" id="tab-lista" type="button">Lista Prodotti</button>
+<button class="tab" id="tab-mappa" type="button">Mappa</button>
+<button class="tab" id="tab-stats" type="button">Statistiche</button>
 </nav>
-
 <main>
-  <section id="view-lista">
-    <div class="card">
-      <h3 class="section" style="margin-top:0">Nuovo Inserimento</h3>
-      <div class="row" style="align-items:flex-end; flex-wrap:wrap;">
-        <div style="flex:1; min-width:200px">
-          <label for="name">Descrizione Prodotto</label>
-          <input id="name" placeholder="Nome prodotto..." type="text" autocomplete="off" spellcheck="false"/>
-        </div>
-        <div style="flex:1; min-width:200px">
-          <label for="lot">Numero Lotto</label>
-          <input id="lot" placeholder="Numero lotto..." type="text" autocomplete="off" spellcheck="false"/>
-        </div>
-        <div style="flex:1; min-width:200px">
-          <label for="expiry">Data Scadenza</label>
-          <input id="expiry" placeholder="Es: GEN/26 oppure GEN/26-FEB/26" type="text" autocomplete="off" spellcheck="false"/>
-        </div>
-      </div>
-      <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
-        <button class="ghost" id="clearBtn" type="button">Pulisci</button>
-        <button id="saveBtn" type="button" style="min-width: 120px;">Salva</button>
-      </div>
-    </div>
-
-    <div class="card" style="padding: 20px 28px;">
-      <div style="position:relative;">
-        
-<div class="filter-tabs">
-  <button class="tab active" data-list-filter="all" type="button">Tutti</button>
-  <button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
-  <button class="tab" data-list-filter="terra" type="button">Terra</button>
-  <button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
+<section id="view-lista">
+<div class="card">
+<h3 class="section" style="margin-top:0">Nuovo Inserimento</h3>
+<div class="row" style="align-items:flex-end; flex-wrap:wrap;">
+<div style="flex:1; min-width:200px">
+<label for="name">Descrizione Prodotto</label>
+<input autocomplete="off" id="name" placeholder="Nome prodotto..." spellcheck="false" type="text"/>
 </div>
-<div class="search-wrap"><span class="icon">🔍</span><input id="search" placeholder="Cerca per nome o lotto..." type="text" style="padding-left: 45px;" autocomplete="off" spellcheck="false"/>
-        <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
-      </div>
-      <div class="toolbar" style="justify-content:flex-end">
-        
-      <button class="ghost" id="resetSearchBtn" type="button" style="font-size:0.85rem; padding: 8px 14px;">Resetta filtri</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="action-bar">
-        <button id="exportPdfBtn" class="action-btn pdf" type="button">PDF</button>
-        <button id="exportJsonBtn" class="action-btn" type="button" style="background: #4b5563;">JSON</button>
-        <button class="action-btn import" type="button">
+<div style="flex:1; min-width:200px">
+<label for="lot">Numero Lotto</label>
+<input autocomplete="off" id="lot" placeholder="Numero lotto..." spellcheck="false" type="text"/>
+</div>
+<div style="flex:1; min-width:200px">
+<label for="expiry">Data Scadenza</label>
+<input autocomplete="off" id="expiry" placeholder="Es: Gen/26" spellcheck="false" type="text"/>
+</div>
+</div>
+<div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
+<button class="ghost" id="clearBtn" type="button">Pulisci</button>
+<button id="saveBtn" style="min-width: 120px;" type="button">Salva</button>
+</div>
+</div>
+<div class="card" style="padding: 20px 28px;">
+<div style="position:relative;">
+<div class="filter-tabs">
+<button class="tab active" data-list-filter="all" type="button">Tutti</button>
+<button class="tab" data-list-filter="scaffale" type="button">Scaffale</button>
+<button class="tab" data-list-filter="terra" type="button">Terra</button>
+<button class="tab" data-list-filter="prelievo" type="button">Prelievo</button>
+</div>
+<div class="search-wrap"><span class="icon">🔍</span><input autocomplete="off" id="search" placeholder="Cerca per nome o lotto..." spellcheck="false" style="padding-left: 45px;" type="text"/>
+<span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5; font-size: 1.2rem;">🔍</span>
+</div>
+<div class="toolbar reset-toolbar" style="justify-content:flex-end">
+<button class="ghost" id="resetSearchBtn" style="font-size:0.85rem; padding: 8px 14px;" type="button">Resetta filtri</button>
+</div>
+</div>
+<div class="card">
+<div class="action-bar">
+<button class="action-btn pdf" id="exportPdfBtn" type="button">PDF</button>
+<button class="action-btn" id="exportJsonBtn" style="background: #4b5563;" type="button">JSON</button>
+<button class="action-btn import" type="button">
           Importa
-          <input id="importJsonFile" type="file" accept="application/json"/>
-        </button>
-      </div>
-    </div>
+          <input accept="application/json" id="importJsonFile" type="file"/>
+</button>
+</div>
+</div>
+<div class="card">
+<h3 class="section">Prodotti su scaffali</h3>
+<div id="listUnplaced"></div>
+</div>
+<div class="card">
+<h3 class="section">Prodotti a terra</h3>
+<div id="listPlaced"></div>
+</div>
+</div></section>
+<section id="view-mappa" style="display:none">
+<div class="card">
+<div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+<div style="display:flex; gap:10px">
+<div class="pill">Righe: 7</div>
+<div class="pill">Colonne: 10</div>
+</div>
+<div class="badge" id="occupiedBadge">Occupate: 0</div>
+</div>
+</div>
+<div class="card grid-wrap">
+<div class="grid-scroll">
+<div class="grid-frame" id="gridFrame">
+<div aria-hidden="true" class="axis-corner"></div>
+<div aria-label="Numeri colonne sopra" class="axis axis-top" id="axisTop"></div>
+<div aria-hidden="true" class="axis-corner"></div>
+<div aria-label="Numeri righe sinistra" class="axis axis-left" id="axisLeft"></div>
+<div class="grid" id="grid"></div>
+<div aria-label="Numeri righe destra" class="axis axis-right" id="axisRight"></div>
+<div aria-hidden="true" class="axis-corner"></div>
+<div aria-label="Numeri colonne sotto" class="axis axis-bottom" id="axisBottom"></div>
+<div aria-hidden="true" class="axis-corner"></div>
+</div>
+</div>
+</div>
+</section>
+<section id="view-stats" style="display:none">
+<div class="card">
+<h3 class="section" style="margin-top:0">Statistiche</h3>
+<div class="muted" id="statsSummary" style="font-weight:700"></div>
+</div>
+<div class="card">
+<h3 class="section">Top inseriti / eliminati</h3>
+<div class="row" style="gap:14px; align-items:stretch">
+<div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">Top inseriti</div>
+<div id="statsTopAdded"></div>
+</div>
+<div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">Top eliminati</div>
+<div id="statsTopRemoved"></div>
+</div>
+</div>
+<div class="muted" id="statsAvgDwell" style="margin-top:14px; font-weight:700"></div>
+</div>
+<div class="card">
+<h3 class="section">Raggruppamento scadenze</h3><div class="expiry-layout"><div class="expiry-left"><div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">🟢 Verdi (&gt; 9 mesi)</div>
+<div id="statsListGreen"></div>
+</div></div><div class="expiry-right"><div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">🟡 Gialli (6–9 mesi)</div>
+<div id="statsListYellow"></div>
+</div><div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">🔴 Rossi (&lt; 6 mesi)</div>
+<div id="statsListRed"></div>
+</div><div style="flex:1; min-width:240px">
+<div class="pill" style="margin-bottom:10px; display:inline-block">☠️ Scaduti</div>
+<div id="statsListSkull"></div>
+</div></div></div>
 
-    <div class="card">
-      <h3 class="section">Prodotti su scaffali</h3>
-      <div id="listUnplaced"></div>
-    </div>
 
-    <div class="card">
-      <h3 class="section">Prodotti a terra</h3>
-      <div id="listPlaced"></div>
-    </div>
-  </section>
-
-  <section id="view-mappa" style="display:none">
-    <div class="card">
-      <div style="display:flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <div style="display:flex; gap:10px">
-          <div class="pill">Righe: 7</div>
-          <div class="pill">Colonne: 10</div>
-        </div>
-        <div class="badge" id="occupiedBadge">Occupate: 0</div>
-      </div>
-    </div>
-
-    <div class="card grid-wrap">
-      <div class="grid-scroll">
-        <div class="grid-frame" id="gridFrame">
-          <div class="axis-corner" aria-hidden="true"></div>
-          <div class="axis axis-top" id="axisTop" aria-label="Numeri colonne sopra"></div>
-          <div class="axis-corner" aria-hidden="true"></div>
-
-          <div class="axis axis-left" id="axisLeft" aria-label="Numeri righe sinistra"></div>
-          <div class="grid" id="grid"></div>
-          <div class="axis axis-right" id="axisRight" aria-label="Numeri righe destra"></div>
-
-          <div class="axis-corner" aria-hidden="true"></div>
-          <div class="axis axis-bottom" id="axisBottom" aria-label="Numeri colonne sotto"></div>
-          <div class="axis-corner" aria-hidden="true"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="view-stats" style="display:none">
-    <div class="card">
-      <h3 class="section" style="margin-top:0">Statistiche</h3>
-      <div id="statsSummary" class="muted" style="font-weight:700"></div>
-    </div>
-
-    <div class="card">
-      <h3 class="section">Top inseriti / eliminati</h3>
-      <div class="row" style="gap:14px; align-items:stretch">
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">Top inseriti</div>
-          <div id="statsTopAdded"></div>
-        </div>
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">Top eliminati</div>
-          <div id="statsTopRemoved"></div>
-        </div>
-      </div>
-      <div id="statsAvgDwell" class="muted" style="margin-top:14px; font-weight:700"></div>
-    </div>
-
-    <div class="card">
-      <h3 class="section">Raggruppamento scadenze</h3>
-      <div class="row" style="gap:14px">
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">☠️ Scaduti</div>
-          <div id="statsListSkull"></div>
-        </div>
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">🔴 Rossi (&lt; 6 mesi)</div>
-          <div id="statsListRed"></div>
-        </div>
-      </div>
-      <div class="row" style="gap:14px; margin-top:14px">
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">🟡 Gialli (6–9 mesi)</div>
-          <div id="statsListYellow"></div>
-        </div>
-        <div style="flex:1; min-width:240px">
-          <div class="pill" style="margin-bottom:10px; display:inline-block">🟢 Verdi (&gt; 9 mesi)</div>
-          <div id="statsListGreen"></div>
-        </div>
-      </div>
-    </div>
-  </section>
+</div>
+</section>
 </main>
-
 <footer class="install" id="installBar">
-  <span style="font-weight:600; color:#374151">Installa app per uso offline.</span>
-  <button id="installBtn" type="button" style="background:var(--primary-grad); color:white; border-radius:25px; box-shadow:none;">Installa Ora</button>
+<span style="font-weight:600; color:#374151">Installa app per uso offline.</span>
+<button id="installBtn" style="background:var(--primary-grad); color:white; border-radius:25px; box-shadow:none;" type="button">Installa Ora</button>
 </footer>
-
 <footer>
   Applicazione ideata e sviluppata da <strong>Fabio Barbieri</strong>
 </footer>
-
 <template id="list-item-tpl">
-  <div class="list-item">
-    <div style="min-width:0">
-      <div class="abbr"></div>
-      <div class="muted" data-detail=""></div>
-    </div>
-    <div class="row" data-btns="" style="flex:0 0 auto; gap:8px"></div>
-  </div>
-</template>
-
-<dialog id="cellDialog">
-  <form method="dialog">
-    <h3 id="cellTitle">Dettaglio Cella</h3>
-    <label for="dName">Descrizione</label>
-    <input id="dName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
-    <label for="dLot">Lotto</label>
-    <input id="dLot" type="text" autocomplete="off" spellcheck="false"/>
-    <label for="dExpiry" style="margin-top:12px">Data Scadenza</label>
-    <input id="dExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
-    <div class="row" style="margin-top:24px;"></div>
-  </form>
-</dialog>
-
-<dialog id="colDialog">
-  <form method="dialog">
-    <h3>Scegli colonna</h3>
-    <label for="colSelect">Colonna di destinazione</label>
-    <select id="colSelect" style="margin-bottom:20px"></select>
-    <div class="row" style="margin-top:24px; justify-content: flex-end;">
-      <button class="ghost" type="button" id="colCancel">Annulla</button>
-      <button type="button" id="colOk" class="alt">Conferma Spostamento</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog id="editDialog">
-  <form method="dialog">
-    <h3>Modifica Prodotto</h3>
-    <label for="eName">Descrizione</label>
-    <input id="eName" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
-    <label for="eLot">Lotto</label>
-    <input id="eLot" type="text" style="margin-bottom:12px" autocomplete="off" spellcheck="false"/>
-    <label for="eExpiry">Data Scadenza</label>
-    <input id="eExpiry" type="text" placeholder="Es: GEN/26" autocomplete="off" spellcheck="false"/>
-    <div class="row" style="margin-top:24px; justify-content:flex-end;">
-      <button class="ghost" type="button" id="eCancel">Annulla</button>
-      <button type="button" id="eSave" class="alt">Salva</button>
-    </div>
-  </form>
-</dialog>
-
-<div id="notification-modal">
-  <div class="modal-content">
-    <h3 id="modalTitle">Titolo</h3>
-    <p id="modalMessage" style="color: #6b7280; margin: 16px 0 24px;">Messaggio</p>
-    <div class="row" style="justify-content: flex-start; gap: 10px;">
-      <button class="ghost" id="modalCancelBtn" type="button">Annulla</button>
-      <button id="modalConfirmBtn" type="button">OK</button>
-    </div>
-  </div>
+<div class="list-item">
+<div style="min-width:0">
+<div class="abbr"></div>
+<div class="muted" data-detail=""></div>
 </div>
-
-<script type="module" src="./js/app.js"></script>
+<div class="row" data-btns="" style="flex:0 0 auto; gap:8px"></div>
+</div>
+</template>
+<dialog id="cellDialog">
+<form method="dialog">
+<h3 id="cellTitle">Dettaglio Cella</h3>
+<label for="dName">Descrizione</label>
+<input autocomplete="off" id="dName" spellcheck="false" style="margin-bottom:12px" type="text"/>
+<label for="dLot">Lotto</label>
+<input autocomplete="off" id="dLot" spellcheck="false" type="text"/>
+<label for="dExpiry" style="margin-top:12px">Data Scadenza</label>
+<input autocomplete="off" id="dExpiry" placeholder="Es: Gen/26" spellcheck="false" type="text"/>
+<div class="row" style="margin-top:24px;"></div>
+</form>
+</dialog>
+<dialog id="colDialog">
+<form method="dialog">
+<h3>Scegli colonna</h3>
+<label for="colSelect">Colonna di destinazione</label>
+<select id="colSelect" style="margin-bottom:20px"></select>
+<div class="row" style="margin-top:24px; justify-content: flex-end;">
+<button class="ghost" id="colCancel" type="button">Annulla</button>
+<button class="alt" id="colOk" type="button">Conferma Spostamento</button>
+</div>
+</form>
+</dialog>
+<dialog id="editDialog">
+<form method="dialog">
+<h3>Modifica Prodotto</h3>
+<label for="eName">Descrizione</label>
+<input autocomplete="off" id="eName" spellcheck="false" style="margin-bottom:12px" type="text"/>
+<label for="eLot">Lotto</label>
+<input autocomplete="off" id="eLot" spellcheck="false" style="margin-bottom:12px" type="text"/>
+<label for="eExpiry">Data Scadenza</label>
+<input autocomplete="off" id="eExpiry" placeholder="Es: Gen/26" spellcheck="false" type="text"/>
+<div class="row" style="margin-top:24px; justify-content:flex-end;">
+<button class="ghost" id="eCancel" type="button">Annulla</button>
+<button class="alt" id="eSave" type="button">Salva</button>
+</div>
+</form>
+</dialog>
+<div id="notification-modal">
+<div class="modal-content">
+<h3 id="modalTitle">Titolo</h3>
+<p id="modalMessage" style="color: #6b7280; margin: 16px 0 24px;">Messaggio</p>
+<div class="row" style="justify-content: flex-start; gap: 10px;">
+<button class="ghost" id="modalCancelBtn" type="button">Annulla</button>
+<button id="modalConfirmBtn" type="button">OK</button>
+</div>
+</div>
+</div>
+<script src="./js/app.js" type="module"></script>
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js');
